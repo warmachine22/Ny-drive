@@ -1,15 +1,15 @@
 {
   "protocol_version": "0.5",
   "project_status": "active",
-  "phase": "uninitialized",
+  "phase": "planning",
   "adoption": {
     "mode": "greenfield",
     "adopted_at": null,
     "baseline_commit": null
   },
   "product_definition": {
-    "status": "draft",
-    "accepted_at": null
+    "status": "accepted",
+    "accepted_at": "2026-08-30T14:58:55Z"
   },
   "verification": {
     "status": "not_run",
@@ -20,5 +20,5 @@
     "commit": null
   },
   "blocked": null,
-  "updated_at": null
+  "updated_at": "2026-08-30T14:58:55Z"
 }
