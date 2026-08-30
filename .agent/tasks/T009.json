@@ -1,0 +1,29 @@
+{
+  "id": "T009",
+  "kind": "implementation",
+  "title": "Add player controls, isometric camera, and reset",
+  "status": "planned",
+  "priority": "high",
+  "depends_on": ["T007"],
+  "areas": ["player-experience"],
+  "requirements": ["FR-009", "FR-011", "FR-012", "FR-013"],
+  "requires": ["repo-write", "shell"],
+  "prefers": ["browser-interaction", "vision"],
+  "acceptance": [
+    "desktop keyboard controls map through the action-input layer to steering, throttle, braking/reverse, handbrake, and reset without physics code reading DOM keys directly",
+    "a near-isometric follow camera uses stable pitch/yaw and smoothing with enough look-ahead to read upcoming streets at driving speed",
+    "camera behavior remains readable through normal drift yaw and does not snap unpredictably when the car rotates quickly",
+    "reset finds or uses a safe nearby road pose and restores an overturned, stuck, fallen, or undrivable car without requiring a page reload",
+    "the browser can launch directly into free driving with the required controls and no mission/progression dependency"
+  ],
+  "verify": "npm run check",
+  "verification": null,
+  "claim": null,
+  "handoff": null,
+  "review_of": null,
+  "correction_of": null,
+  "integration": null,
+  "evidence": null,
+  "completed_at": null,
+  "commit": null
+}
