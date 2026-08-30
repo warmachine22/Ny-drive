@@ -1,3 +1,4 @@
+import { describe, expect, it } from 'vitest';
 import { WorldStreamer, type TileRuntimeAdapter } from './WorldStreamer';
 import type { WorldSource } from './WorldSource';
 import type { RuntimeOrigin, TileManifestEntry, TilePayload, WorldManifest, WorldPoint } from './types';
