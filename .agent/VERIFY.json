@@ -3,9 +3,9 @@
   "required_level": "quick",
   "setup": null,
   "commands": {
-    "quick": null,
-    "full": null,
+    "quick": "python3 scripts/roach_check.py",
+    "full": "python3 scripts/roach_check.py && python3 .agent/tests/run_template_tests.py --fast",
     "smoke": null
   },
-  "notes": "Template state. Planning should populate the required health command and, when a fresh checkout needs preparation before CI can run it, an optional setup command."
+  "notes": "Planning bootstrap commands verify Roach/project coordination only. T002 must extend or replace these with product-aware TypeScript build/typecheck/test commands once the browser runtime exists; map-compiler tasks must add Python compiler tests, and T014 must add a browser smoke command."
 }
