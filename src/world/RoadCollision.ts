@@ -29,7 +29,17 @@ function triangulatePolygon(polygon: TilePolygon): THREE.Vector2[][] {
   const contour = ringVectors(polygon.outer);
   if (contour.length < 3) return [];
   const holes = polygon.holes.map(ringVectors).filter((ring) => ring.length >= 3);
-  return THREE.ShapeUtils.triangulateShape(contour, holes);
+  const points = [...contour, ...holes.flat()];
+  const faces = THREE.ShapeUtils.triangulateShape(contour, holes);
+  return faces.map(([a, b, c]) => {
+    const first = points[a];
+    const second = points[b];
+    const third = points[c];
+    if (!first || !second || !third) {
+      throw new Error('Three.js returned an out-of-range road triangulation index.');
+    }
+    return [first, second, third];
+  });
 }
 
 export function buildRoadCollisionMesh(tile: TilePayload): RoadCollisionMesh {
@@ -40,7 +50,6 @@ export function buildRoadCollisionMesh(tile: TilePayload): RoadCollisionMesh {
   for (const surface of tile.road_surfaces) {
     for (const polygon of surface.polygons) {
       for (const triangle of triangulatePolygon(polygon)) {
-        if (triangle.length !== 3) continue;
         for (const point of triangle) {
           vertices.push(point.x, 0, point.y);
           indices.push(vertexIndex);
