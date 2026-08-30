@@ -26,7 +26,12 @@ def normalize_dcm_feature(
 
     source_id = str(first(properties, "OBJECTID", "objectid", default=feature.get("id", "unknown")))
     geometry = transform_geometry(shape(raw_geometry), source_crs)
-    width = parse_dcm_width_m(first(properties, "Streetwidth", "streetwidth", "Street_Width"))
+    # The current shapefile metadata exposes the ten-character DBF field name
+    # `Streetwidt`; older exports/FGDB views expose `Streetwidth`. Accept both
+    # explicitly so a source refresh does not silently discard mapped widths.
+    width = parse_dcm_width_m(
+        first(properties, "Streetwidt", "Streetwidth", "streetwidth", "Street_Width")
+    )
     semantics = RoadSemantics(width_m=width, road_class=first(properties, "Route_Type", "route_type"))
     return RoadCenterline(
         source_id=source_id,

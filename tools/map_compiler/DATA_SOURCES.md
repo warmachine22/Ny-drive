@@ -6,7 +6,7 @@ The browser must never parse raw GIS files. This directory is the offline bounda
 
 - **Project CRS:** EPSG:32118 — NAD83 / New York Long Island, metres.
 - **Fixed project origin:** WGS84 `(-74.0060, 40.7128)`. The projected coordinate of this point is subtracted from every normalized point, so `(0, 0)` is stable and reproducible.
-- **NYC DCM native CRS:** EPSG:2263 — NAD83 / New York Long Island (US survey feet). DCP metadata identifies EPSG:2263 explicitly; `Streetwidth` is treated as feet and converted to metres.
+- **NYC DCM native CRS:** EPSG:2263 — NAD83 / New York Long Island (US survey feet). DCP metadata identifies EPSG:2263 explicitly; mapped street width is treated as feet and converted to metres.
 - **NYC Open Data / Socrata GeoJSON and OSM:** WGS84 longitude/latitude (EPSG:4326) unless an input explicitly declares another CRS.
 
 Do not silently guess the CRS for full File Geodatabase imports. The API adapters have explicit defaults; future FGDB readers must pass the CRS discovered from the source layer metadata.
@@ -23,9 +23,9 @@ The portal listed metadata updated 2025-12-10 and data updated 2024-04-24 when t
 
 ### Digital City Map — Street Center Line
 
-Dataset resource: `eak9-f97n`. DCP describes the feature class as citywide official street centerlines and widths. Its metadata identifies native EPSG:2263 and fields including `OBJECTID`, `Borough`, `Feat_Type`, `Street_NM`, `Route_Type`, `Streetwidth`, `RoadwayType`, and `Build_Status`.
+Dataset resource: `eak9-f97n`. DCP describes the feature class as citywide official street centerlines and widths. Its metadata identifies native EPSG:2263 and fields including `OBJECTID`, `Borough`, `Feat_Type`, `Street_NM`, `Route_Type`, mapped street width, roadway type, and build status. Current shapefile metadata exposes the ten-character DBF field name `Streetwidt`; older FGDB/exports may expose `Streetwidth`, so the adapter deliberately supports both aliases.
 
-DCM updates monthly. `sources.lock.json` pins the 2024-03-31 resource available through NYC Open Data for reproducibility. A later deliberate source refresh should update the lock and regenerate fixtures/build manifests in the same change.
+DCM updates monthly. `sources.lock.json` pins the DCP metadata release dated 2025-10-31 for the current normalization contract. A later deliberate source refresh should update the lock and regenerate fixtures/build manifests in the same change.
 
 ### OpenStreetMap
 

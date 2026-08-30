@@ -19,8 +19,8 @@
       "provider": "NYC Department of City Planning",
       "dataset_id": "eak9-f97n",
       "landing_page": "https://data.cityofnewyork.us/City-Government/Digital-City-Map-Geodatabase/eak9-f97n",
-      "metadata": "https://www.nyc.gov/assets/planning/download/pdf/data-maps/open-data/dcm_street_centerline.pdf",
-      "pinned_release": "2024-03-31",
+      "metadata": "https://s-media.nyc.gov/agencies/dcp/assets/files/pdf/data-tools/bytes/dcm_street_centerline.pdf",
+      "pinned_release": "2025-10-31",
       "update_frequency": "monthly",
       "native_crs": "EPSG:2263",
       "terms": "NYC Open Data / DCP informational-use limitations and disclaimers"
