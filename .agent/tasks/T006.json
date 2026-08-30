@@ -1,0 +1,29 @@
+{
+  "id": "T006",
+  "kind": "implementation",
+  "title": "Render driveable roads and physics collision",
+  "status": "planned",
+  "priority": "high",
+  "depends_on": ["T005"],
+  "areas": ["road-runtime"],
+  "requirements": ["FR-002", "FR-003", "FR-005"],
+  "requires": ["repo-write", "shell"],
+  "prefers": ["browser-interaction", "vision"],
+  "acceptance": [
+    "compiled road and intersection meshes render in Three.js at the expected one-to-one scale and connect cleanly across active tile boundaries",
+    "Rapier receives road collision geometry only for the configured physics-active tile region and removes it when those tiles deactivate",
+    "road geometry follows compiled roadbed/intersection surfaces rather than drawing fixed-width ribbons from centerlines",
+    "direction/lane/road-class metadata remains accessible for debugging and future presentation even though traffic rules are not enforced in the initial free-drive mode",
+    "the player vehicle can traverse the complete Manhattan fixture without falling through normal tile seams or encountering duplicate collision planes"
+  ],
+  "verify": "npm run check",
+  "verification": null,
+  "claim": null,
+  "handoff": null,
+  "review_of": null,
+  "correction_of": null,
+  "integration": null,
+  "evidence": null,
+  "completed_at": null,
+  "commit": null
+}
