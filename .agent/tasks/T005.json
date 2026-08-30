@@ -1,0 +1,29 @@
+{
+  "id": "T005",
+  "kind": "implementation",
+  "title": "Implement streamed world and floating-origin runtime",
+  "status": "planned",
+  "priority": "high",
+  "depends_on": ["T002", "T004"],
+  "areas": ["streaming-runtime"],
+  "requirements": ["FR-005", "QR-002", "QR-003"],
+  "requires": ["repo-write", "shell"],
+  "prefers": ["browser-interaction"],
+  "acceptance": [
+    "the browser loads the Manhattan fixture by tile manifest and maintains explicit loading, ready, active-physics, cached, and unloaded tile lifecycle states",
+    "render and physics activation radii are configurable and tiles outside the active/cache policy are detached and released rather than accumulating with travel distance",
+    "world/tile coordinates remain meter-based while a floating runtime origin can rebase scene and physics objects without changing geographic identity or relative distances",
+    "automated tests prove tile selection and rebasing invariants, and runtime debug output exposes loaded tile and collider counts",
+    "the streamer tolerates asynchronous tile completion without moving the vehicle into partially initialized collision geometry"
+  ],
+  "verify": "npm run check",
+  "verification": null,
+  "claim": null,
+  "handoff": null,
+  "review_of": null,
+  "correction_of": null,
+  "integration": null,
+  "evidence": null,
+  "completed_at": null,
+  "commit": null
+}
