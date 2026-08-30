@@ -2,7 +2,7 @@
   "id": "T004",
   "kind": "implementation",
   "title": "Compile first Manhattan road-tile fixture",
-  "status": "claimed",
+  "status": "done",
   "priority": "urgent",
   "depends_on": ["T003"],
   "areas": ["map-compiler", "map-fixtures"],
@@ -17,19 +17,22 @@
     "the fixture is small and redistributable enough to support automated/runtime development or is generated deterministically from documented small inputs"
   ],
   "verify": "python3 -m pytest tools/map_compiler/tests -k 'tile or seam or fixture'",
-  "verification": null,
-  "claim": {
-    "worker": "chatgpt-nydrive-a830",
-    "claimed_at": "2026-08-30T21:47:00Z",
-    "lease_expires_at": "2026-08-30T23:47:00Z",
-    "branch": "roach/T004-chatgpt-nydrive-a830",
-    "base_commit": "6bd461c2ecfd88f48bf75abb929dbd761d89945f"
-  },
+  "verification": "PR #3 merged into main as c29796bee180997ec814b2f21f2af62b584a40a4. The official Flatiron/Madison Square snapshot contains 110 roadbed polygons and 71 CSCL centerline segments and deterministically compiles to 15 256 m tiles. T004 tile/seam/fixture tests, the full map-compiler suite, web runtime, project health, lint/schema, and Ubuntu Roach coordination checks passed on clean GitHub-hosted runners.",
+  "claim": null,
   "handoff": null,
   "review_of": null,
   "correction_of": null,
-  "integration": null,
-  "evidence": null,
-  "completed_at": null,
-  "commit": null
+  "integration": {
+    "branch": "roach/T004-chatgpt-nydrive-a830",
+    "merge_commit": "c29796bee180997ec814b2f21f2af62b584a40a4",
+    "level": "quick",
+    "verified_at": "2026-08-30T22:00:30Z"
+  },
+  "evidence": {
+    "work": "Official bounded NYC source snapshot, CSCL semantics adapter, deterministic 256 m tile compiler, 15 checked-in runtime tiles, manifest, and seam/determinism tests merged via PR #3",
+    "work_waived": false,
+    "task_check": "passed"
+  },
+  "completed_at": "2026-08-30T22:00:30Z",
+  "commit": "c29796bee180997ec814b2f21f2af62b584a40a4"
 }
