@@ -1,0 +1,29 @@
+{
+  "id": "T002",
+  "kind": "implementation",
+  "title": "Scaffold browser runtime and project verification",
+  "status": "planned",
+  "priority": "urgent",
+  "depends_on": ["T001"],
+  "areas": ["web-runtime", "tooling"],
+  "requirements": ["FR-013", "QR-001", "QR-005"],
+  "requires": ["repo-write", "shell"],
+  "prefers": ["browser-interaction"],
+  "acceptance": [
+    "a TypeScript + Vite browser application builds and opens with a Three.js scene using a WebGL2-compatible rendering baseline",
+    "Rapier 3D/WASM is initialized behind a small physics boundary without coupling game logic directly to package bootstrap details",
+    "action-based keyboard input exposes steer, throttle, brake/reverse, handbrake, and reset actions even if vehicle behavior is still placeholder",
+    "package scripts provide deterministic typecheck/test/build checks and .agent/VERIFY.json is updated so quick verification includes product-aware checks",
+    "third-party runtime dependencies are pinned and their licenses are recorded or mechanically discoverable for later attribution review"
+  ],
+  "verify": "npm run check",
+  "verification": null,
+  "claim": null,
+  "handoff": null,
+  "review_of": null,
+  "correction_of": null,
+  "integration": null,
+  "evidence": null,
+  "completed_at": null,
+  "commit": null
+}
