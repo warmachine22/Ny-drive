@@ -1,0 +1,32 @@
+name: Map compiler check
+
+on:
+  push:
+    branches:
+      - main
+      - 'roach/**'
+    paths:
+      - 'tools/map_compiler/**'
+      - '.agent/VERIFY.json'
+      - '.github/workflows/map-compiler-check.yml'
+  pull_request:
+    paths:
+      - 'tools/map_compiler/**'
+      - '.agent/VERIFY.json'
+      - '.github/workflows/map-compiler-check.yml'
+
+permissions:
+  contents: read
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Install compiler dependencies
+        run: python3 -m pip install -e 'tools/map_compiler[test]'
+      - name: Run compiler tests
+        run: python3 -m pytest tools/map_compiler/tests

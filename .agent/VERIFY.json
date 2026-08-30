@@ -1,11 +1,11 @@
 {
   "version": 1,
   "required_level": "quick",
-  "setup": "npm install --ignore-scripts",
+  "setup": "npm install --ignore-scripts && python3 -m pip install -e 'tools/map_compiler[test]'",
   "commands": {
-    "quick": "python3 scripts/roach_check.py && npm run check",
-    "full": "python3 scripts/roach_check.py && npm run check && python3 .agent/tests/run_template_tests.py --fast",
+    "quick": "python3 scripts/roach_check.py && npm run check && python3 -m pytest tools/map_compiler/tests",
+    "full": "python3 scripts/roach_check.py && npm run check && python3 -m pytest tools/map_compiler/tests && python3 .agent/tests/run_template_tests.py --fast",
     "smoke": null
   },
-  "notes": "Quick verification now covers both Roach coordination health and the TypeScript/Three.js/Rapier browser runtime. Map-compiler tasks must add Python compiler tests; T014 must add an automated browser smoke command."
+  "notes": "Quick verification covers Roach coordination health, the TypeScript/Three.js/Rapier browser runtime, and the offline NYC map compiler normalization tests. T014 must add an automated browser smoke command."
 }

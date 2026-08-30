@@ -1,0 +1,22 @@
+{
+  "type": "FeatureCollection",
+  "features": [
+    {
+      "type": "Feature",
+      "properties": {
+        "OBJECTID": 42,
+        "Borough": "Manhattan",
+        "Feat_Type": "Mapped_St",
+        "Street_NM": "TEST STREET",
+        "Route_Type": "Major_street",
+        "Streetwidt": "60",
+        "RoadwayType": "Street",
+        "Build_Status": "Built"
+      },
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [[987000.0, 212000.0], [987100.0, 212000.0]]
+      }
+    }
+  ]
+}

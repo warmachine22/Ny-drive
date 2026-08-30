@@ -1,15 +1,15 @@
 # Third-party notices
 
-Ny-drive records direct JavaScript dependencies here so later release work can preserve attribution and license obligations. Exact versions are also pinned in `package.json`.
+Ny-drive records direct software dependencies here so later release work can preserve attribution and license obligations. Exact versions are pinned in `package.json` and `tools/map_compiler/pyproject.toml`.
 
-## Runtime
+## Browser runtime
 
 | Package | Version | License | Purpose |
 | --- | ---: | --- | --- |
 | `three` | 0.185.1 | MIT | Browser 3D rendering |
 | `@dimforge/rapier3d-compat` | 0.20.0 | Apache-2.0 | WebAssembly rigid-body physics |
 
-## Development
+## Browser development
 
 | Package | Version | License | Purpose |
 | --- | ---: | --- | --- |
@@ -18,4 +18,14 @@ Ny-drive records direct JavaScript dependencies here so later release work can p
 | `vite` | 8.2.2 | MIT | Development server and production bundling |
 | `vitest` | 4.1.11 | MIT | Unit tests |
 
-This file covers direct dependencies only. Before a public release, generate and review the complete transitive dependency license inventory and add required attribution text/assets for geographic data and vehicle/art assets.
+## Map compiler
+
+| Package | Version | License | Purpose |
+| --- | ---: | --- | --- |
+| `pyproj` | 3.7.2 | MIT | CRS definitions and coordinate transformations via PROJ |
+| `shapely` | 2.1.2 | BSD-3-Clause | Geometry normalization via GEOS |
+| `pytest` | 9.0.2 | MIT | Map-compiler tests (development only) |
+
+PROJ is MIT licensed. GEOS is LGPL-2.1-or-later. Geographic-source terms and attribution are tracked separately in `tools/map_compiler/DATA_SOURCES.md` and `tools/map_compiler/sources.lock.json` because source-data obligations are not the same as software-library licenses.
+
+Before a public game release, generate and review the complete transitive dependency license inventory and add required attribution text/assets for geographic data and vehicle/art assets.
