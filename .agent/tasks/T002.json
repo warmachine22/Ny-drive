@@ -2,7 +2,7 @@
   "id": "T002",
   "kind": "implementation",
   "title": "Scaffold browser runtime and project verification",
-  "status": "planned",
+  "status": "claimed",
   "priority": "urgent",
   "depends_on": ["T001"],
   "areas": ["web-runtime", "tooling"],
@@ -18,7 +18,13 @@
   ],
   "verify": "npm run check",
   "verification": null,
-  "claim": null,
+  "claim": {
+    "worker": "chatgpt-nydrive-a830",
+    "claimed_at": "2026-08-30T21:35:48Z",
+    "lease_expires_at": "2026-08-30T23:35:48Z",
+    "branch": "roach/T002-chatgpt-nydrive-a830",
+    "base_commit": "447805542e3460931f1300553fbbf1d9aaa8ff05"
+  },
   "handoff": null,
   "review_of": null,
   "correction_of": null,
