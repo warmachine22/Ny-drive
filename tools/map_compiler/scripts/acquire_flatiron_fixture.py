@@ -4,6 +4,7 @@ import base64
 import gzip
 import json
 import sys
+import urllib.parse
 import urllib.request
 from typing import Any
 
@@ -12,13 +13,22 @@ from shapely.geometry import box, mapping, shape
 # Roughly Fifth Avenue to Park Avenue South and East 20th to East 28th:
 # enough real Manhattan grid for a 20–30 block development fixture.
 BOUNDS = (-73.9967, 40.7388, -73.9882, 40.7481)
-ROADBED_URL = "https://data.cityofnewyork.us/api/v3/views/i36f-5ih7/query.geojson?accessType=DOWNLOAD"
-CENTERLINE_URL = "https://data.cityofnewyork.us/api/v3/views/inkn-q76z/query.geojson?accessType=DOWNLOAD"
+ROADBED_RESOURCE = "https://data.cityofnewyork.us/resource/i36f-5ih7.geojson"
+CENTERLINE_RESOURCE = "https://data.cityofnewyork.us/resource/inkn-q76z.geojson"
+
+
+def bounded_url(base_url: str) -> str:
+    left, bottom, right, top = BOUNDS
+    params = {
+        "$limit": "5000",
+        "$where": f"within_box(the_geom,{top},{left},{bottom},{right})",
+    }
+    return f"{base_url}?{urllib.parse.urlencode(params)}"
 
 
 def download_json(url: str) -> dict[str, Any]:
     request = urllib.request.Request(url, headers={"User-Agent": "Ny-drive fixture compiler/0.1"})
-    with urllib.request.urlopen(request, timeout=180) as response:
+    with urllib.request.urlopen(request, timeout=90) as response:
         return json.load(response)
 
 
@@ -40,6 +50,9 @@ def subset_feature_collection(
     *,
     keep_properties: tuple[str, ...],
 ) -> dict[str, Any]:
+    # Socrata already performs the coarse bbox query. Intersect locally as a
+    # second deterministic clipping pass so the committed snapshot has exact
+    # fixture bounds independent of source feature extent.
     clip = box(*BOUNDS)
     selected = []
     for feature in collection.get("features", []):
@@ -67,12 +80,14 @@ def subset_feature_collection(
 
 
 def main() -> int:
+    roadbed_url = bounded_url(ROADBED_RESOURCE)
+    centerline_url = bounded_url(CENTERLINE_RESOURCE)
     roadbed = subset_feature_collection(
-        download_json(ROADBED_URL),
+        download_json(roadbed_url),
         keep_properties=("source_id", "feat_code", "sub_code", "status"),
     )
     centerline = subset_feature_collection(
-        download_json(CENTERLINE_URL),
+        download_json(centerline_url),
         keep_properties=(
             "physicalid",
             "status",
@@ -97,12 +112,12 @@ def main() -> int:
             "roadbed": {
                 "dataset_id": "i36f-5ih7",
                 "data_revision": "2024-04-24",
-                "url": ROADBED_URL,
+                "query_url": roadbed_url,
             },
             "centerline": {
                 "dataset_id": "inkn-q76z",
                 "data_revision": "2026-08-22",
-                "url": CENTERLINE_URL,
+                "query_url": centerline_url,
             },
         },
         "roadbed": roadbed,
