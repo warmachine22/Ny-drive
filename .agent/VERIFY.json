@@ -1,11 +1,11 @@
 {
   "version": 1,
   "required_level": "quick",
-  "setup": null,
+  "setup": "npm install --ignore-scripts",
   "commands": {
-    "quick": "python3 scripts/roach_check.py",
-    "full": "python3 scripts/roach_check.py && python3 .agent/tests/run_template_tests.py --fast",
+    "quick": "python3 scripts/roach_check.py && npm run check",
+    "full": "python3 scripts/roach_check.py && npm run check && python3 .agent/tests/run_template_tests.py --fast",
     "smoke": null
   },
-  "notes": "Planning bootstrap commands verify Roach/project coordination only. T002 must extend or replace these with product-aware TypeScript build/typecheck/test commands once the browser runtime exists; map-compiler tasks must add Python compiler tests, and T014 must add a browser smoke command."
+  "notes": "Quick verification now covers both Roach coordination health and the TypeScript/Three.js/Rapier browser runtime. Map-compiler tasks must add Python compiler tests; T014 must add an automated browser smoke command."
 }
