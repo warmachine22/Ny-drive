@@ -1,7 +1,7 @@
 {
   "protocol_version": "0.5",
   "project_status": "active",
-  "phase": "planning",
+  "phase": "execution",
   "adoption": {
     "mode": "greenfield",
     "adopted_at": null,
@@ -15,10 +15,10 @@
     "status": "not_run",
     "level": null,
     "command": null,
-    "notes": "Template state; initialize for the actual project.",
+    "notes": "Execution backlog initialized; product-aware verification will be extended by T002 and later compiler/browser tasks.",
     "verified_at": null,
     "commit": null
   },
   "blocked": null,
-  "updated_at": "2026-08-30T14:58:55Z"
+  "updated_at": "2026-08-30T16:15:00Z"
 }
