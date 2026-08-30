@@ -9,7 +9,7 @@ on:
       - '.github/workflows/acquire-flatiron-fixture.yml'
 
 permissions:
-  contents: read
+  contents: write
 
 jobs:
   acquire:
@@ -21,5 +21,19 @@ jobs:
           python-version: '3.12'
       - name: Install geometry dependency
         run: python3 -m pip install 'shapely==2.1.2'
-      - name: Fetch and emit bounded source snapshot
-        run: python3 tools/map_compiler/scripts/acquire_flatiron_fixture.py
+      - name: Fetch bounded official source snapshot
+        run: >-
+          python3 tools/map_compiler/scripts/acquire_flatiron_fixture.py
+          --output tools/map_compiler/fixtures/flatiron/source_snapshot.json
+      - name: Commit deterministic source snapshot
+        shell: bash
+        run: |
+          git config user.email "roach-ci@example.invalid"
+          git config user.name "Roach CI"
+          git add tools/map_compiler/fixtures/flatiron/source_snapshot.json
+          if git diff --cached --quiet; then
+            echo "Snapshot already matches committed source."
+          else
+            git commit -m "T004: capture official Flatiron source snapshot"
+            git push origin HEAD:roach/T004-chatgpt-nydrive-a830
+          fi
