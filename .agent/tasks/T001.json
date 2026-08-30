@@ -2,7 +2,7 @@
   "id": "T001",
   "kind": "planning",
   "title": "Plan product implementation",
-  "status": "claimed",
+  "status": "done",
   "priority": "urgent",
   "depends_on": [
     "T000"
@@ -25,19 +25,20 @@
     "python3 scripts/roach.py ready reports READY after the planning task is finished"
   ],
   "verify": null,
-  "verification": null,
-  "claim": {
-    "worker": "chatgpt-nydrive-a830",
-    "claimed_at": "2026-08-30T16:04:30Z",
-    "lease_expires_at": "2026-08-30T18:04:30Z",
-    "branch": "roach/T001-chatgpt-nydrive-a830",
-    "base_commit": "1783187ba73e6b8dbf38e366c50ef0f96ead1663"
-  },
+  "verification": "Completed the READY technical plan, configured bootstrap verification, created requirement-linked T002-T014 execution work, fast-forwarded the claimed planning branch to main, and added repository CI that executes roach_check.py plus roach.py ready after coordination changes.",
+  "claim": null,
   "handoff": null,
   "review_of": null,
   "correction_of": null,
-  "integration": null,
-  "evidence": null,
-  "completed_at": null,
-  "commit": null
+  "integration": {
+    "branch": "roach/T001-chatgpt-nydrive-a830",
+    "merge_commit": "f9076dbdb1600c2e3c4aae81441fe6c307f5182f"
+  },
+  "evidence": {
+    "work": "planning branch integrated as f9076dbdb1600c2e3c4aae81441fe6c307f5182f",
+    "work_waived": false,
+    "task_check": "none"
+  },
+  "completed_at": "2026-08-30T16:12:30Z",
+  "commit": "f9076dbdb1600c2e3c4aae81441fe6c307f5182f"
 }
