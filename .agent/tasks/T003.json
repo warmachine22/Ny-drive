@@ -2,7 +2,7 @@
   "id": "T003",
   "kind": "implementation",
   "title": "Build NYC data ingestion and normalized map model",
-  "status": "claimed",
+  "status": "done",
   "priority": "urgent",
   "depends_on": ["T001"],
   "areas": ["map-compiler"],
@@ -17,19 +17,22 @@
     "automated compiler tests cover projection/unit conversion and representative source normalization"
   ],
   "verify": "python3 -m pytest tools/map_compiler/tests",
-  "verification": null,
-  "claim": {
-    "worker": "chatgpt-nydrive-a830",
-    "claimed_at": "2026-08-30T21:37:11Z",
-    "lease_expires_at": "2026-08-30T23:37:11Z",
-    "branch": "roach/T003-chatgpt-nydrive-a830",
-    "base_commit": "cb8ef5ef1f70cdf120e0f757d782208d7e44530b"
-  },
+  "verification": "PR #2 merged into main as 72e37a7b41676bfcfb5d723c75500bbb94126a22 after clean GitHub-hosted verification. The map-compiler workflow installed pinned pyproj 3.7.2, Shapely 2.1.2, and pytest 9.0.2 and reported 7 passed in 0.21s. Existing web runtime, project health, and lint/schema checks also passed.",
+  "claim": null,
   "handoff": null,
   "review_of": null,
   "correction_of": null,
-  "integration": null,
-  "evidence": null,
-  "completed_at": null,
-  "commit": null
+  "integration": {
+    "branch": "roach/T003-chatgpt-nydrive-a830",
+    "merge_commit": "72e37a7b41676bfcfb5d723c75500bbb94126a22",
+    "level": "quick",
+    "verified_at": "2026-08-30T21:45:45Z"
+  },
+  "evidence": {
+    "work": "NYC/OSM normalization compiler, source lock, provenance documentation, and automated tests merged via PR #2",
+    "work_waived": false,
+    "task_check": "passed"
+  },
+  "completed_at": "2026-08-30T21:45:45Z",
+  "commit": "72e37a7b41676bfcfb5d723c75500bbb94126a22"
 }
