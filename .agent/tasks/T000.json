@@ -2,7 +2,7 @@
   "id": "T000",
   "kind": "discovery",
   "title": "Define product with owner",
-  "status": "planned",
+  "status": "claimed",
   "priority": "urgent",
   "depends_on": [],
   "areas": [
@@ -23,7 +23,13 @@
     "a planning task exists and .agent/PLAN.md has been initialized for autonomous technical planning"
   ],
   "verification": null,
-  "claim": null,
+  "claim": {
+    "worker": "chatgpt-nydrive-a830",
+    "claimed_at": "2026-08-30T14:57:09Z",
+    "lease_expires_at": "2026-08-30T16:57:09Z",
+    "branch": "roach/T000-chatgpt-nydrive-a830",
+    "base_commit": "45fd3a51be4dd9a89c37d5237103ecc7378bd414"
+  },
   "handoff": null,
   "review_of": null,
   "correction_of": null,
