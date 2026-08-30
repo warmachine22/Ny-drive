@@ -1,0 +1,29 @@
+{
+  "id": "T004",
+  "kind": "implementation",
+  "title": "Compile first Manhattan road-tile fixture",
+  "status": "planned",
+  "priority": "urgent",
+  "depends_on": ["T003"],
+  "areas": ["map-compiler", "map-fixtures"],
+  "requirements": ["FR-002", "FR-003", "FR-005", "QR-002", "QR-004"],
+  "requires": ["repo-write", "shell"],
+  "prefers": ["web-research"],
+  "acceptance": [
+    "a roughly 20–30 block Manhattan fixture is compiled from real source geometry into deterministic 256 m logical tiles rather than hand-authored roads",
+    "generated tiles preserve one-to-one meter distances, roadbed/intersection shape, direction/lane metadata where source data supports it, and stable IDs across tile seams",
+    "the fixture includes a city/tile manifest and enough visual/collision geometry and metadata for a browser runtime to load without GIS libraries",
+    "seam tests demonstrate that roads crossing adjacent tile boundaries do not create visible or collision gaps in the fixture",
+    "the fixture is small and redistributable enough to support automated/runtime development or is generated deterministically from documented small inputs"
+  ],
+  "verify": "python3 -m pytest tools/map_compiler/tests -k 'tile or seam or fixture'",
+  "verification": null,
+  "claim": null,
+  "handoff": null,
+  "review_of": null,
+  "correction_of": null,
+  "integration": null,
+  "evidence": null,
+  "completed_at": null,
+  "commit": null
+}
