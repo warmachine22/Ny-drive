@@ -1,0 +1,29 @@
+{
+  "id": "T013",
+  "kind": "implementation",
+  "title": "Establish distributable vehicle asset and attribution inventory",
+  "status": "planned",
+  "priority": "normal",
+  "depends_on": ["T002"],
+  "areas": ["assets-licensing"],
+  "requirements": ["FR-006", "QR-005"],
+  "requires": ["network", "repo-write"],
+  "prefers": ["web-research", "vision"],
+  "acceptance": [
+    "the repository contains a clearly distributable placeholder or licensed late-1990s AWD rally-sedan/GC8-era vehicle representation suitable for the initial build",
+    "exact Subaru, WRX, STI, model-year, badge, logo, and third-party mesh usage is documented as licensed, excluded, or intentionally replaced rather than assumed",
+    "THIRD_PARTY/attribution documentation inventories runtime libraries, geographic datasets used by generated assets, fonts/art, and vehicle assets with their relevant license/attribution obligations",
+    "vehicle physics configuration is kept separate from mesh/trademark identity so replacing the art does not require rewriting the driving model",
+    "no asset needed for the initial runnable build has unknown redistribution status"
+  ],
+  "verify": null,
+  "verification": null,
+  "claim": null,
+  "handoff": null,
+  "review_of": null,
+  "correction_of": null,
+  "integration": null,
+  "evidence": null,
+  "completed_at": null,
+  "commit": null
+}
