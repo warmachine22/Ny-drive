@@ -2,7 +2,7 @@
   "id": "T000",
   "kind": "discovery",
   "title": "Define product with owner",
-  "status": "claimed",
+  "status": "done",
   "priority": "urgent",
   "depends_on": [],
   "areas": [
@@ -22,14 +22,8 @@
     "roach.py accept-product completes this discovery task and records accepted product state without a separate finish step",
     "a planning task exists and .agent/PLAN.md has been initialized for autonomous technical planning"
   ],
-  "verification": null,
-  "claim": {
-    "worker": "chatgpt-nydrive-a830",
-    "claimed_at": "2026-08-30T14:57:09Z",
-    "lease_expires_at": "2026-08-30T16:57:09Z",
-    "branch": "roach/T000-chatgpt-nydrive-a830",
-    "base_commit": "45fd3a51be4dd9a89c37d5237103ecc7378bd414"
-  },
+  "verification": "Owner explicitly asked to initialize this repository from the NYC driving-game concept developed in the conversation; PRODUCT.md and PROJECT.md capture that intent and non-blocking open questions are separated from accepted scope.",
+  "claim": null,
   "handoff": null,
   "review_of": null,
   "correction_of": null,
