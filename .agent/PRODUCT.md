@@ -1,6 +1,6 @@
 # Product
 
-Status: DRAFT — READY FOR ACCEPTANCE
+Status: ACCEPTED
 
 This file is the durable, authoritative representation of the owner's intended product. Preserve decisions and intent rather than conversation history.
 
