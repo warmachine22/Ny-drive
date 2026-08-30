@@ -31,7 +31,13 @@ function triangulatePolygon(polygon: TilePolygon): THREE.Vector2[][] {
   const holes = polygon.holes.map(ringVectors).filter((ring) => ring.length >= 3);
   const points = [...contour, ...holes.flat()];
   const faces = THREE.ShapeUtils.triangulateShape(contour, holes);
-  return faces.map(([a, b, c]) => {
+  return faces.map((face) => {
+    const a = face[0];
+    const b = face[1];
+    const c = face[2];
+    if (a === undefined || b === undefined || c === undefined) {
+      throw new Error('Three.js returned an incomplete road triangulation face.');
+    }
     const first = points[a];
     const second = points[b];
     const third = points[c];
