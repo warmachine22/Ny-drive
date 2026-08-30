@@ -2,7 +2,7 @@
   "id": "T003",
   "kind": "implementation",
   "title": "Build NYC data ingestion and normalized map model",
-  "status": "planned",
+  "status": "claimed",
   "priority": "urgent",
   "depends_on": ["T001"],
   "areas": ["map-compiler"],
@@ -18,7 +18,13 @@
   ],
   "verify": "python3 -m pytest tools/map_compiler/tests",
   "verification": null,
-  "claim": null,
+  "claim": {
+    "worker": "chatgpt-nydrive-a830",
+    "claimed_at": "2026-08-30T21:37:11Z",
+    "lease_expires_at": "2026-08-30T23:37:11Z",
+    "branch": "roach/T003-chatgpt-nydrive-a830",
+    "base_commit": "cb8ef5ef1f70cdf120e0f757d782208d7e44530b"
+  },
   "handoff": null,
   "review_of": null,
   "correction_of": null,
