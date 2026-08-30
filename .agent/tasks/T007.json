@@ -1,0 +1,29 @@
+{
+  "id": "T007",
+  "kind": "implementation",
+  "title": "Implement vehicle rigid-body and AWD tire model",
+  "status": "planned",
+  "priority": "high",
+  "depends_on": ["T002", "T006"],
+  "areas": ["vehicle-physics"],
+  "requirements": ["FR-006", "FR-007"],
+  "requires": ["repo-write", "shell"],
+  "prefers": ["browser-interaction"],
+  "acceptance": [
+    "the player car uses a dynamic Rapier chassis rigid body with a legally distributable placeholder GC8-era vehicle representation rather than kinematic translation",
+    "four wheel contacts drive spring/damper suspension and tire forces through scene queries with configurable wheelbase, track, ride height, spring, damper, mass, and inertia parameters",
+    "longitudinal drive/braking and lateral slip forces produce a progressive grip limit and the AWD drivetrain distributes torque through data-driven parameters",
+    "simulation uses a fixed physics timestep decoupled from render framerate and exposes enough telemetry to inspect wheel contact, suspension, speed, steering, and slip behavior",
+    "the car can accelerate, steer, brake, traverse uneven road geometry, and recover from ordinary contact without numerical instability in the Manhattan fixture"
+  ],
+  "verify": "npm run check",
+  "verification": null,
+  "claim": null,
+  "handoff": null,
+  "review_of": null,
+  "correction_of": null,
+  "integration": null,
+  "evidence": null,
+  "completed_at": null,
+  "commit": null
+}
