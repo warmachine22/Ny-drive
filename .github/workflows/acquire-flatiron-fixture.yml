@@ -1,0 +1,25 @@
+name: Acquire Flatiron fixture
+
+on:
+  push:
+    branches:
+      - 'roach/T004-chatgpt-nydrive-a830'
+    paths:
+      - 'tools/map_compiler/scripts/acquire_flatiron_fixture.py'
+      - '.github/workflows/acquire-flatiron-fixture.yml'
+
+permissions:
+  contents: read
+
+jobs:
+  acquire:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Install geometry dependency
+        run: python3 -m pip install 'shapely==2.1.2'
+      - name: Fetch and emit bounded source snapshot
+        run: python3 tools/map_compiler/scripts/acquire_flatiron_fixture.py
