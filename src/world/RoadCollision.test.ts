@@ -69,11 +69,16 @@ describe('road collision geometry', () => {
     expect(physics.world.colliders.len()).toBe(1);
 
     const ray = new RAPIER.Ray({ x: 10, y: 3, z: 10 }, { x: 0, y: -1, z: 0 });
+    const collider = physics.world.colliders.getAll()[0];
+    expect(collider).toBeDefined();
+    expect(collider?.castRay(ray, 10, true)).toBeGreaterThanOrEqual(0);
+
+    // World-level scene queries use Rapier's query acceleration structure,
+    // which is refreshed by the normal simulation step.
+    physics.step(1 / 60);
     expect(physics.world.castRay(ray, 10, true)).not.toBeNull();
 
     collisions.rebase({ x: 5, y: 7 });
-    const collider = physics.world.colliders.getAll()[0];
-    expect(collider).toBeDefined();
     expect(collider?.translation().x).toBeCloseTo(-5);
     expect(collider?.translation().z).toBeCloseTo(-7);
 
