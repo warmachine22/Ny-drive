@@ -1,0 +1,39 @@
+{
+  "version": 1,
+  "project_crs": "EPSG:32118",
+  "project_origin_wgs84": [-74.006, 40.7128],
+  "sources": [
+    {
+      "key": "nyc-planimetrics-roadbed",
+      "provider": "NYC Office of Technology and Innovation",
+      "dataset_id": "i36f-5ih7",
+      "landing_page": "https://data.cityofnewyork.us/Transportation/NYC-Planimetric-Database-Roadbed/i36f-5ih7",
+      "socrata_geojson": "https://data.cityofnewyork.us/resource/i36f-5ih7.geojson",
+      "metadata_last_updated": "2025-12-10",
+      "data_last_updated": "2024-04-24",
+      "api_crs": "EPSG:4326",
+      "terms": "NYC Open Data Terms of Use; no usage restrictions, subject to dataset/provider terms"
+    },
+    {
+      "key": "nyc-dcm-street-centerline",
+      "provider": "NYC Department of City Planning",
+      "dataset_id": "eak9-f97n",
+      "landing_page": "https://data.cityofnewyork.us/City-Government/Digital-City-Map-Geodatabase/eak9-f97n",
+      "metadata": "https://www.nyc.gov/assets/planning/download/pdf/data-maps/open-data/dcm_street_centerline.pdf",
+      "pinned_release": "2024-03-31",
+      "update_frequency": "monthly",
+      "native_crs": "EPSG:2263",
+      "terms": "NYC Open Data / DCP informational-use limitations and disclaimers"
+    },
+    {
+      "key": "openstreetmap",
+      "provider": "OpenStreetMap contributors",
+      "format": "OSM 0.6 / Overpass JSON adapter",
+      "small_area_acquisition": "https://overpass-api.de/api/interpreter",
+      "citywide_candidate": "https://download.geofabrik.de/north-america/us/new-york.html",
+      "native_crs": "EPSG:4326",
+      "license": "ODbL-1.0",
+      "attribution": "© OpenStreetMap contributors"
+    }
+  ]
+}

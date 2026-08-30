@@ -1,0 +1,23 @@
+{
+  "version": 0.6,
+  "osm3s": {"timestamp_osm_base": "2026-08-30T00:00:00Z"},
+  "elements": [
+    {"type": "node", "id": 1, "lat": 40.71280, "lon": -74.00600},
+    {"type": "node", "id": 2, "lat": 40.71290, "lon": -74.00580},
+    {
+      "type": "way",
+      "id": 77,
+      "nodes": [1, 2],
+      "tags": {
+        "highway": "primary",
+        "name": "TEST AVENUE",
+        "oneway": "yes",
+        "lanes": "3",
+        "lanes:forward": "3",
+        "width": "11.5",
+        "bridge": "yes",
+        "layer": "1"
+      }
+    }
+  ]
+}

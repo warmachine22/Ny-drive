@@ -1,0 +1,19 @@
+{
+  "type": "FeatureCollection",
+  "features": [
+    {
+      "type": "Feature",
+      "properties": {"source_id": 1001, "feat_code": 2000, "sub_code": 1, "status": "No change"},
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [[
+          [-74.00610, 40.71275],
+          [-74.00595, 40.71275],
+          [-74.00595, 40.71285],
+          [-74.00610, 40.71285],
+          [-74.00610, 40.71275]
+        ]]
+      }
+    }
+  ]
+}
