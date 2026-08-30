@@ -1,0 +1,29 @@
+{
+  "id": "T012",
+  "kind": "implementation",
+  "title": "Expand compiled road world to all five boroughs",
+  "status": "planned",
+  "priority": "high",
+  "depends_on": ["T006", "T010"],
+  "areas": ["citywide-data"],
+  "requirements": ["FR-001", "FR-002", "FR-003", "FR-004", "FR-005", "QR-002", "QR-004"],
+  "requires": ["network", "repo-write", "shell"],
+  "prefers": ["web-research"],
+  "acceptance": [
+    "the same deterministic compiler used for the Manhattan fixture can generate a tile index and road world covering Manhattan, Brooklyn, Queens, the Bronx, and Staten Island without manually modeled street grids",
+    "representative road distances, widths, direction/lane metadata, intersections, and grades remain source-derived and meter-scale across the citywide build",
+    "borough boundaries, bridge connections, highway ramps, and other major cross-tile/cross-borough links are included in automated connectivity diagnostics",
+    "a documented route/audit set demonstrates that representative long routes can be traced through the compiled road graph across borough and neighborhood boundaries",
+    "compiler diagnostics surface disconnected components, invalid topology, missing tiles, and unresolved grade-separation cases for correction rather than hiding them"
+  ],
+  "verify": "python3 -m pytest tools/map_compiler/tests",
+  "verification": null,
+  "claim": null,
+  "handoff": null,
+  "review_of": null,
+  "correction_of": null,
+  "integration": null,
+  "evidence": null,
+  "completed_at": null,
+  "commit": null
+}
