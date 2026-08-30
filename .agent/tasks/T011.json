@@ -1,0 +1,29 @@
+{
+  "id": "T011",
+  "kind": "implementation",
+  "title": "Generate simplified procedural NYC scenery",
+  "status": "planned",
+  "priority": "normal",
+  "depends_on": ["T003", "T005"],
+  "areas": ["scenery"],
+  "requirements": ["FR-010", "QR-003", "QR-005"],
+  "requires": ["repo-write", "shell"],
+  "prefers": ["vision", "web-research"],
+  "acceptance": [
+    "the compiler/runtime can represent simplified surrounding city massing using real building footprints and available heights where useful without requiring photorealistic building models",
+    "representative buildings are generated or batched with a deliberately simple material/style system that keeps draw calls and geometry bounded by the active streaming region",
+    "scenery collision is limited to what driving needs and does not create physics bodies for every decorative object by default",
+    "missing heights or attributes use documented deterministic fallback rules rather than pretending invented values are source-accurate",
+    "building/geographic data attribution and any procedural art dependencies are included in the project attribution inventory"
+  ],
+  "verify": "npm run check",
+  "verification": null,
+  "claim": null,
+  "handoff": null,
+  "review_of": null,
+  "correction_of": null,
+  "integration": null,
+  "evidence": null,
+  "completed_at": null,
+  "commit": null
+}
