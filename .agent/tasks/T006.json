@@ -2,7 +2,7 @@
   "id": "T006",
   "kind": "implementation",
   "title": "Render driveable roads and physics collision",
-  "status": "planned",
+  "status": "claimed",
   "priority": "high",
   "depends_on": ["T005"],
   "areas": ["road-runtime"],
@@ -18,7 +18,13 @@
   ],
   "verify": "npm run check",
   "verification": null,
-  "claim": null,
+  "claim": {
+    "worker": "chatgpt-nydrive-a830",
+    "claimed_at": "2026-08-30T22:09:00Z",
+    "lease_expires_at": "2026-08-31T00:09:00Z",
+    "branch": "roach/T006-chatgpt-nydrive-a830",
+    "base_commit": "26d9602524ebf92d6cc6fb44f0111c6d1338e18b"
+  },
   "handoff": null,
   "review_of": null,
   "correction_of": null,
