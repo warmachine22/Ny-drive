@@ -1,11 +1,13 @@
 from __future__ import annotations
 
+import argparse
 import base64
 import gzip
 import json
 import sys
 import urllib.parse
 import urllib.request
+from pathlib import Path
 from typing import Any
 
 from shapely.geometry import box, mapping, shape
@@ -79,7 +81,7 @@ def subset_feature_collection(
     return {"type": "FeatureCollection", "features": selected}
 
 
-def main() -> int:
+def build_snapshot() -> dict[str, Any]:
     roadbed_url = bounded_url(ROADBED_RESOURCE)
     centerline_url = bounded_url(CENTERLINE_RESOURCE)
     roadbed = subset_feature_collection(
@@ -104,7 +106,7 @@ def main() -> int:
             "segment_ty",
         ),
     )
-    snapshot = {
+    return {
         "schema_version": 1,
         "name": "flatiron-madison-square",
         "bounds_wgs84": list(BOUNDS),
@@ -123,11 +125,30 @@ def main() -> int:
         "roadbed": roadbed,
         "centerline": centerline,
     }
+
+
+def main() -> int:
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--output", type=Path)
+    args = parser.parse_args()
+
+    snapshot = build_snapshot()
     raw = json.dumps(snapshot, sort_keys=True, separators=(",", ":")).encode("utf-8")
+    roadbed_count = len(snapshot["roadbed"]["features"])
+    centerline_count = len(snapshot["centerline"]["features"])
+
+    if args.output:
+        args.output.parent.mkdir(parents=True, exist_ok=True)
+        args.output.write_bytes(raw + b"\n")
+        print(
+            f"wrote {args.output} roadbed={roadbed_count} centerline={centerline_count} json_bytes={len(raw)}"
+        )
+        return 0
+
     compressed = gzip.compress(raw, mtime=0)
     encoded = base64.b64encode(compressed).decode("ascii")
     print(
-        f"fixture roadbed={len(roadbed['features'])} centerline={len(centerline['features'])} "
+        f"fixture roadbed={roadbed_count} centerline={centerline_count} "
         f"json_bytes={len(raw)} gzip_bytes={len(compressed)}",
         file=sys.stderr,
     )
