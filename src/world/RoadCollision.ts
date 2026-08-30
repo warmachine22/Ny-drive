@@ -25,6 +25,16 @@ function ringVectors(ring: [number, number][]): THREE.Vector2[] {
   return points;
 }
 
+function upwardTriangle(points: [THREE.Vector2, THREE.Vector2, THREE.Vector2]): THREE.Vector2[] {
+  const [first, second, third] = points;
+  const cross2d =
+    (second.x - first.x) * (third.y - first.y) -
+    (second.y - first.y) * (third.x - first.x);
+  // Mapping 2D (x,y) -> 3D (x,0,z) flips the sign of the Y normal.
+  // Clockwise 2D winding therefore produces a road-facing +Y normal.
+  return cross2d > 0 ? [first, third, second] : [first, second, third];
+}
+
 function triangulatePolygon(polygon: TilePolygon): THREE.Vector2[][] {
   const contour = ringVectors(polygon.outer);
   if (contour.length < 3) return [];
@@ -44,7 +54,7 @@ function triangulatePolygon(polygon: TilePolygon): THREE.Vector2[][] {
     if (!first || !second || !third) {
       throw new Error('Three.js returned an out-of-range road triangulation index.');
     }
-    return [first, second, third];
+    return upwardTriangle([first, second, third]);
   });
 }
 
