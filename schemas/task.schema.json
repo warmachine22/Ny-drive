@@ -1,0 +1,144 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://roachmethod.dev/schemas/0.5/task.schema.json",
+  "title": "Roach task record",
+  "description": "One file per task under .agent/tasks/T###.json. Authored fields may be written by a worker; coordinator fields are written by scripts/roach.py and should not be edited by hand.",
+  "type": "object",
+  "required": ["id", "kind", "title", "status", "priority", "depends_on", "areas", "requirements", "requires", "prefers", "acceptance"],
+  "additionalProperties": false,
+  "properties": {
+    "id": {
+      "type": "string",
+      "pattern": "^T[0-9]{3,}$",
+      "description": "Stable task id. Must match the file name."
+    },
+    "kind": {
+      "type": "string",
+      "pattern": "^[a-z0-9][a-z0-9._:-]*$",
+      "description": "discovery, planning, research, design, implementation, verification, product-feedback, or a project-specific lowercase token.",
+      "examples": ["implementation", "verification", "research"]
+    },
+    "title": { "type": "string", "minLength": 1 },
+    "status": {
+      "enum": ["planned", "claimed", "active", "blocked", "verify", "done", "cancelled"],
+      "description": "claimed/active/verify require a claim; every other status forbids one."
+    },
+    "priority": { "enum": ["urgent", "high", "normal", "low"] },
+    "depends_on": {
+      "type": "array",
+      "items": { "type": "string", "pattern": "^T[0-9]{3,}$" },
+      "uniqueItems": true,
+      "description": "Prerequisite task ids. Must exist, must not self-reference, must not be cancelled while this task is live, and must not form a cycle."
+    },
+    "areas": {
+      "type": "array",
+      "items": { "type": "string" },
+      "uniqueItems": true,
+      "description": "Coarse collision hints. A task is not eligible while another live claim shares an area."
+    },
+    "requirements": {
+      "type": "array",
+      "items": { "type": "string", "pattern": "^(FR|QR)-[0-9]{3,}$" },
+      "uniqueItems": true,
+      "description": "Ids from the active Requirements section of .agent/PRODUCT.md. Terminal tasks may retain retired ids; live work may not."
+    },
+    "requires": {
+      "type": "array",
+      "items": { "type": "string", "pattern": "^[a-z0-9][a-z0-9._:-]*$" },
+      "uniqueItems": true,
+      "description": "Hard capability gate. A worker without all of these must not claim the task."
+    },
+    "prefers": {
+      "type": "array",
+      "items": { "type": "string", "pattern": "^[a-z0-9][a-z0-9._:-]*$" },
+      "uniqueItems": true,
+      "description": "Soft preference. Improves ranking; never excludes."
+    },
+    "acceptance": {
+      "type": "array",
+      "items": { "type": "string", "minLength": 1 },
+      "uniqueItems": true,
+      "description": "Observable conditions that mean the task is done. Required for every non-cancelled task."
+    },
+    "verify": {
+      "description": "Optional executable check for this task. A string runs through the platform shell; an array runs directly with no shell. Run by finish, which refuses when it fails.",
+      "oneOf": [
+        { "type": "string", "minLength": 1 },
+        { "type": "array", "items": { "type": "string", "minLength": 1 }, "minItems": 1 },
+        { "type": "null" }
+      ]
+    },
+    "verification": {
+      "type": ["string", "null"],
+      "description": "Free-form completion note, or the reason a cancelled task was retired. Required for terminal tasks. This is a claim by its author, not proof."
+    },
+    "claim": {
+      "description": "Present exactly when status is claimed, active, or verify.",
+      "oneOf": [
+        { "type": "null" },
+        {
+          "type": "object",
+          "required": ["worker", "claimed_at", "lease_expires_at", "branch"],
+          "additionalProperties": false,
+          "properties": {
+            "worker": { "type": "string", "minLength": 1, "maxLength": 48 },
+            "claimed_at": { "type": "string", "format": "date-time" },
+            "lease_expires_at": { "type": "string", "format": "date-time", "description": "Must be later than claimed_at." },
+            "branch": { "type": "string", "minLength": 1, "description": "Conventionally roach/<task>-<worker>." },
+            "base_commit": { "type": ["string", "null"], "description": "Base branch HEAD when the claim was taken." },
+            "adopted_from": { "type": "string", "description": "Previous owner, when this claim came from adopt." },
+            "adopted_reason": { "type": "string", "description": "Why a live claim was overridden. Required with adopt --force." }
+          }
+        }
+      ]
+    },
+    "handoff": {
+      "type": ["string", "null"],
+      "description": "Continuation context a successor cannot cheaply infer. Holds the blocker reason while status is blocked. Must be null on terminal tasks."
+    },
+    "review_of": {
+      "type": ["string", "null"],
+      "pattern": "^T[0-9]{3,}$",
+      "description": "This verification task independently reviews that completed task. Requires kind: verification."
+    },
+    "correction_of": {
+      "type": ["string", "null"],
+      "pattern": "^T[0-9]{3,}$",
+      "description": "This task corrects findings recorded by that completed task."
+    },
+    "integration": {
+      "description": "Written by integrate. The durable link between a completed task and the work it produced.",
+      "oneOf": [
+        { "type": "null" },
+        {
+          "type": "object",
+          "required": ["merge_commit"],
+          "additionalProperties": false,
+          "properties": {
+            "branch": { "type": "string" },
+            "merge_commit": { "type": "string", "minLength": 7 },
+            "level": { "enum": ["quick", "full", "smoke"] },
+            "verified_at": { "type": "string", "format": "date-time" }
+          }
+        }
+      ]
+    },
+    "evidence": {
+      "description": "Written by finish. How the repository knows work happened.",
+      "oneOf": [
+        { "type": "null" },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "work": { "type": "string", "description": "Human-readable summary of the evidence found." },
+            "work_waived": { "type": "boolean", "description": "True when finished with --no-work." },
+            "task_check": { "enum": ["passed", "failed", "skipped", "none"] }
+          }
+        }
+      ]
+    },
+    "completed_at": { "type": ["string", "null"], "format": "date-time" },
+    "commit": { "type": ["string", "null"], "description": "Base branch HEAD when the task was finished." }
+  }
+}

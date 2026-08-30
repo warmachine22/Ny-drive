@@ -1,0 +1,11 @@
+{
+  "version": 1,
+  "required_level": "quick",
+  "setup": null,
+  "commands": {
+    "quick": null,
+    "full": null,
+    "smoke": null
+  },
+  "notes": "Template state. Planning should populate the required health command and, when a fresh checkout needs preparation before CI can run it, an optional setup command."
+}

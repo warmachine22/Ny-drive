@@ -1,0 +1,35 @@
+{
+  "id": "T000",
+  "kind": "discovery",
+  "title": "Define product with owner",
+  "status": "planned",
+  "priority": "urgent",
+  "depends_on": [],
+  "areas": [
+    "product-definition"
+  ],
+  "requirements": [],
+  "requires": [
+    "repo-write",
+    "user-dialogue"
+  ],
+  "prefers": [
+    "web-research"
+  ],
+  "acceptance": [
+    ".agent/PRODUCT.md contains the required core sections and captures the owner's accepted product intent with no critical ambiguity blocking planning",
+    ".agent/PROJECT.md contains a concise orientation summary instead of the template placeholder",
+    "roach.py accept-product completes this discovery task and records accepted product state without a separate finish step",
+    "a planning task exists and .agent/PLAN.md has been initialized for autonomous technical planning"
+  ],
+  "verification": null,
+  "claim": null,
+  "handoff": null,
+  "review_of": null,
+  "correction_of": null,
+  "verify": null,
+  "integration": null,
+  "evidence": null,
+  "completed_at": null,
+  "commit": null
+}

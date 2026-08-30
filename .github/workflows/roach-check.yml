@@ -1,0 +1,117 @@
+name: Roach continuity check
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  # Coordination behaviour is the product. It runs on both operating systems
+  # because the coordinator shells out to git constantly, and a Linux-only
+  # matrix cannot see a path, encoding, or shell difference that would break
+  # every Windows worker.
+  coordination:
+    name: Coordination tests (${{ matrix.os }})
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest]
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v6
+        with:
+          # Completion/doctor logic may need to compare recorded verification
+          # against older product commits. A depth-1 checkout can hide them.
+          fetch-depth: 0
+
+      - uses: actions/setup-python@v7
+        with:
+          python-version: "3.12"
+
+      - name: Configure git for the test harness
+        shell: bash
+        run: |
+          git config --global user.email "roach-ci@example.invalid"
+          git config --global user.name "Roach CI"
+          git config --global init.defaultBranch main
+          # The suites assert on clean working trees; autocrlf would rewrite
+          # line endings during clone and make every checkout look modified.
+          git config --global core.autocrlf false
+
+      - name: Run Roach template and coordination tests
+        run: python .agent/tests/run_template_tests.py
+
+      - name: Validate Roach state
+        run: python scripts/roach.py check
+
+  quality:
+    name: Lint, types, and schemas
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+      - uses: actions/setup-python@v7
+        with:
+          python-version: "3.12"
+
+      # Pinned deliberately. Installing "latest" means a new lint release can
+      # fail a build that changed nothing -- which happened on the first run of
+      # this workflow. Bump these on purpose, with the fixes in the same commit.
+      - name: Install tooling
+        run: pip install 'ruff==0.14.5' 'mypy==1.18.2'
+
+      - name: Lint
+        run: ruff check scripts .agent/tests
+
+      - name: Type check
+        run: mypy
+
+      # The published schemas are the contract for workers that cannot run the
+      # coordinator. A field added to a task record without a matching schema
+      # change silently breaks them, so the two are compared here.
+      - name: Schemas match the coordinator
+        run: python .agent/tests/test_schemas.py
+
+      - name: Verify deployment ignore logic
+        run: bash .agent/tests/test_vercel_ignore.sh
+
+  # Validating coordination state proves the bookkeeping is coherent, not that
+  # the product works. VERIFY.setup is optional preparation for a fresh CI
+  # checkout (dependency install, generated assets, etc.); normal local
+  # verify/integrate commands assume the worker has already prepared its
+  # environment.
+  product:
+    name: Project health
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-python@v7
+        with:
+          python-version: "3.12"
+      - name: Verify project health
+        shell: bash
+        run: |
+          read_verify() {
+            python -c "import json,sys;print(json.load(open('.agent/VERIFY.json')).get(sys.argv[1]) or '')" "$1"
+          }
+          level=$(read_verify required_level)
+          command=$(python -c "import json;print(json.load(open('.agent/VERIFY.json')).get('commands',{}).get('$level') or '')")
+          if [ -z "$command" ]; then
+            echo "No '$level' verification command configured yet; skipping."
+            echo "Planning must populate .agent/VERIFY.json before this check is meaningful."
+            exit 0
+          fi
+
+          setup=$(read_verify setup)
+          if [ -n "$setup" ]; then
+            echo "Preparing fresh checkout for project verification..."
+            bash -lc "$setup"
+          fi
+
+          python scripts/roach.py verify "$level"

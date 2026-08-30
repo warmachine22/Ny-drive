@@ -1,0 +1,170 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://roachmethod.dev/schemas/0.5/state.schema.json",
+  "title": "Roach project state",
+  "description": ".agent/STATE.json. Project status answers whether work should proceed; phase answers what kind of work is appropriate. They are deliberately independent, so a project can be paused during planning without losing its place.",
+  "type": "object",
+  "required": [
+    "protocol_version",
+    "project_status",
+    "phase",
+    "product_definition",
+    "verification",
+    "blocked"
+  ],
+  "additionalProperties": false,
+  "properties": {
+    "protocol_version": {
+      "const": "0.5",
+      "description": "Run `roach.py migrate` to bring an older project forward."
+    },
+    "project_status": {
+      "enum": [
+        "active",
+        "blocked",
+        "paused",
+        "complete"
+      ],
+      "description": "Only active offers claimable work. complete is entered exclusively through the gated completion transition."
+    },
+    "phase": {
+      "enum": [
+        "uninitialized",
+        "discovery",
+        "planning",
+        "execution",
+        "complete"
+      ],
+      "description": "planning, execution, and complete all require accepted product intent. complete phase and complete status must agree."
+    },
+    "product_definition": {
+      "type": "object",
+      "required": [
+        "status",
+        "accepted_at"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "status": {
+          "enum": [
+            "draft",
+            "accepted"
+          ]
+        },
+        "accepted_at": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "format": "date-time",
+          "description": "Required once status is accepted."
+        }
+      }
+    },
+    "verification": {
+      "type": "object",
+      "required": [
+        "status"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "status": {
+          "enum": [
+            "not_run",
+            "passed",
+            "failed"
+          ]
+        },
+        "level": {
+          "enum": [
+            "quick",
+            "full",
+            "smoke",
+            null
+          ]
+        },
+        "command": {
+          "description": "The exact command that ran. Completion re-checks this against the currently configured one.",
+          "oneOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "notes": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "verified_at": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "format": "date-time"
+        },
+        "commit": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "description": "HEAD when verification ran. Completion refuses if product code changed since; coordination-only commits do not invalidate it."
+        }
+      }
+    },
+    "blocked": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "description": "Required non-empty when project_status is blocked or paused, and null otherwise."
+    },
+    "updated_at": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "format": "date-time"
+    },
+    "adoption": {
+      "type": "object",
+      "description": "How this project came to use Roach. greenfield means it was created from the template; brownfield means the method was installed into a repository that already had code and history, which is why commits before baseline_commit reference no task. It also decides whether AGENTS.md and CLAUDE.md are template-owned or project-owned during upgrade.",
+      "required": [
+        "mode"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "mode": {
+          "enum": [
+            "greenfield",
+            "brownfield"
+          ]
+        },
+        "adopted_at": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "format": "date-time"
+        },
+        "baseline_commit": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "description": "Last commit before adoption. Brownfield only; history at or before it predates the method."
+        }
+      }
+    }
+  }
+}

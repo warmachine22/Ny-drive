@@ -1,0 +1,24 @@
+{
+  "protocol_version": "0.5",
+  "project_status": "active",
+  "phase": "uninitialized",
+  "adoption": {
+    "mode": "greenfield",
+    "adopted_at": null,
+    "baseline_commit": null
+  },
+  "product_definition": {
+    "status": "draft",
+    "accepted_at": null
+  },
+  "verification": {
+    "status": "not_run",
+    "level": null,
+    "command": null,
+    "notes": "Template state; initialize for the actual project.",
+    "verified_at": null,
+    "commit": null
+  },
+  "blocked": null,
+  "updated_at": null
+}

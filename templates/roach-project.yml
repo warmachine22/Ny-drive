@@ -1,0 +1,55 @@
+# Roach coordination check for a project using the Roach Method.
+#
+# This validates that coordination state is coherent and that the project's own
+# health command passes. It deliberately does NOT run the Roach coordinator's
+# own test suite -- those tests belong to the method, not to your project.
+name: Roach check
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  roach:
+    name: Coordination state and project health
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          # Completion and doctor logic compare recorded verification against
+          # older commits. A shallow checkout can hide them.
+          fetch-depth: 0
+
+      - uses: actions/setup-python@v7
+        with:
+          python-version: "3.12"
+
+      - name: Validate coordination state
+        run: python scripts/roach.py check
+
+      # VERIFY.setup is optional preparation for a fresh checkout -- installing
+      # dependencies, generating assets. Local verify and integrate assume the
+      # worker has already prepared its environment, so it runs only here.
+      - name: Verify project health
+        shell: bash
+        run: |
+          level=$(python -c "import json;print(json.load(open('.agent/VERIFY.json')).get('required_level') or '')")
+          command=$(python -c "import json;print(json.load(open('.agent/VERIFY.json')).get('commands',{}).get('$level') or '')")
+          if [ -z "$command" ]; then
+            echo "No '$level' verification command configured yet; skipping."
+            echo "Planning must populate .agent/VERIFY.json before this check means anything."
+            exit 0
+          fi
+
+          setup=$(python -c "import json;print(json.load(open('.agent/VERIFY.json')).get('setup') or '')")
+          if [ -n "$setup" ]; then
+            echo "Preparing fresh checkout..."
+            bash -lc "$setup"
+          fi
+
+          python scripts/roach.py verify "$level"

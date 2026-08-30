@@ -1,0 +1,35 @@
+# Roach publishes by refusing any working-tree change outside .agent/, so a
+# single stray build artifact wedges every coordination command. Keep generated
+# files out of the working tree's status.
+
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+.venv/
+venv/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+
+# Node
+node_modules/
+dist/
+build/
+.next/
+.turbo/
+*.tsbuildinfo
+
+# Tooling and hosts
+.vercel/
+.netlify/
+.wrangler/
+coverage/
+*.log
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Coordination edits reconcile could not replay, kept for review.
+.roach-reconcile/

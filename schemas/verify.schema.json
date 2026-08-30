@@ -1,0 +1,45 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://roachmethod.dev/schemas/0.5/verify.schema.json",
+  "title": "Roach project health commands",
+  "description": ".agent/VERIFY.json. These commands are repository-supplied executable text and run with the privileges of whoever invokes Roach -- see docs/SECURITY.md before running them in a repository you did not write.",
+  "type": "object",
+  "required": ["version", "required_level", "commands"],
+  "additionalProperties": false,
+  "properties": {
+    "version": { "const": 1 },
+    "required_level": {
+      "enum": ["quick", "full", "smoke"],
+      "description": "The level that must pass before a project can be marked complete."
+    },
+    "setup": {
+      "$ref": "#/$defs/command",
+      "description": "Optional preparation for a fresh CI checkout -- dependency install, generated assets. Not run by local verify or integrate, which assume a prepared environment."
+    },
+    "commands": {
+      "type": "object",
+      "required": ["quick", "full", "smoke"],
+      "additionalProperties": false,
+      "properties": {
+        "quick": { "$ref": "#/$defs/command", "description": "Inexpensive check, run often." },
+        "full": { "$ref": "#/$defs/command", "description": "Integration-quality tests, lint, build." },
+        "smoke": { "$ref": "#/$defs/command", "description": "Automatable end-to-end or user-flow check." }
+      }
+    },
+    "notes": { "type": ["string", "null"] }
+  },
+  "$defs": {
+    "command": {
+      "description": "A string runs through the platform shell, which is cmd.exe on Windows and /bin/sh elsewhere. An array runs directly with no shell, which is portable across operating systems and is the better choice for a project that may be opened on more than one. null means not configured.",
+      "oneOf": [
+        { "type": "string", "minLength": 1 },
+        { "type": "array", "items": { "type": "string", "minLength": 1 }, "minItems": 1 },
+        { "type": "null" }
+      ],
+      "examples": [
+        "npm test",
+        ["python3", "-m", "pytest", "-q"]
+      ]
+    }
+  }
+}

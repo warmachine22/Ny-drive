@@ -1,0 +1,40 @@
+# Tooling configuration for the Roach coordinator itself.
+#
+# This file configures linting and type checking for `scripts/roach.py` and the
+# template's own test suites. It is not a package definition and adds no runtime
+# dependency: Roach is a single standard-library script on purpose, and a project
+# created from this template does not need to install anything to use it.
+#
+# A project may add its own [project] table here without disturbing this.
+
+[tool.ruff]
+line-length = 120
+target-version = "py310"  # oldest interpreter the coordinator supports
+extend-exclude = [".roach-reconcile"]
+
+[tool.ruff.lint]
+# The coordinator is deliberately written as one dense file with long argparse
+# lines. Rules that fight that shape are off; rules that catch real defects are on.
+select = ["E", "F", "W", "B", "UP", "SIM", "RUF"]
+ignore = [
+  "E501",    # line length is handled by the formatter's judgement, not a hard stop
+  "E701",    # the argparse table packs one subcommand per line on purpose
+  "E702",
+  "SIM108",  # ternaries are not always clearer than an if/else here
+  "B008",
+]
+
+[tool.ruff.lint.per-file-ignores]
+# Tests reach into module internals and rebind module-level paths by design.
+# Tests nest `with` blocks to pair a patch with the exception it expects;
+# flattening them separates the two halves of the assertion.
+".agent/tests/*" = ["B011", "RUF001", "SIM117"]
+
+[tool.mypy]
+python_version = "3.10"
+files = ["scripts/roach.py"]
+strict = true
+# The coordinator reads arbitrary JSON from the repository, so dict[str, Any] is
+# honest rather than lazy. These two rules would only push that Any around.
+disallow_any_expr = false
+warn_return_any = false
