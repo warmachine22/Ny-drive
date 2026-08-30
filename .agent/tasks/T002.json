@@ -2,7 +2,7 @@
   "id": "T002",
   "kind": "implementation",
   "title": "Scaffold browser runtime and project verification",
-  "status": "claimed",
+  "status": "done",
   "priority": "urgent",
   "depends_on": ["T001"],
   "areas": ["web-runtime", "tooling"],
@@ -17,19 +17,22 @@
     "third-party runtime dependencies are pinned and their licenses are recorded or mechanically discoverable for later attribution review"
   ],
   "verify": "npm run check",
-  "verification": null,
-  "claim": {
-    "worker": "chatgpt-nydrive-a830",
-    "claimed_at": "2026-08-30T21:35:48Z",
-    "lease_expires_at": "2026-08-30T23:35:48Z",
-    "branch": "roach/T002-chatgpt-nydrive-a830",
-    "base_commit": "447805542e3460931f1300553fbbf1d9aaa8ff05"
-  },
+  "verification": "Public-repository GitHub Actions allocated a clean hosted runner; dependency installation and the declared npm run check both passed. Roach project health, lint/types/schemas, and Ubuntu coordination checks also passed. PR #1 was merged into main as 5e49e8cb57ddf7ff456cb1918f80e991e3e41a2a.",
+  "claim": null,
   "handoff": null,
   "review_of": null,
   "correction_of": null,
-  "integration": null,
-  "evidence": null,
-  "completed_at": null,
-  "commit": null
+  "integration": {
+    "branch": "roach/T002-chatgpt-nydrive-a830",
+    "merge_commit": "5e49e8cb57ddf7ff456cb1918f80e991e3e41a2a",
+    "level": "quick",
+    "verified_at": "2026-08-30T21:36:51Z"
+  },
+  "evidence": {
+    "work": "14 file(s) changed on main since the claim",
+    "work_waived": false,
+    "task_check": "passed"
+  },
+  "completed_at": "2026-08-30T21:36:51Z",
+  "commit": "5e49e8cb57ddf7ff456cb1918f80e991e3e41a2a"
 }
