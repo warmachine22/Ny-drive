@@ -3,8 +3,13 @@ import { KeyboardInput } from './input/KeyboardInput';
 import { createPhysicsRuntime } from './physics/PhysicsWorld';
 import { createRenderScene } from './render/createScene';
 
-const app = document.querySelector<HTMLElement>('#app');
-if (!app) throw new Error('Missing #app root.');
+function requireAppRoot(): HTMLElement {
+  const root = document.querySelector<HTMLElement>('#app');
+  if (!root) throw new Error('Missing #app root.');
+  return root;
+}
+
+const app = requireAppRoot();
 
 const canvas = document.createElement('canvas');
 canvas.className = 'game-canvas';
