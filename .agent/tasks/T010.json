@@ -1,0 +1,29 @@
+{
+  "id": "T010",
+  "kind": "implementation",
+  "title": "Compile elevation and grade-separated road structures",
+  "status": "planned",
+  "priority": "high",
+  "depends_on": ["T003", "T004"],
+  "areas": ["map-compiler", "grade-separation"],
+  "requirements": ["FR-002", "FR-003", "FR-004", "QR-002", "QR-004"],
+  "requires": ["network", "repo-write", "shell"],
+  "prefers": ["web-research", "vision"],
+  "acceptance": [
+    "an authoritative and distributable NYC-compatible elevation/DEM source is selected, pinned, documented, and ingested by the compiler",
+    "road elevations/grades are generated in meters and remain continuous enough for the vehicle to traverse ordinary slopes without artificial steps at tile or segment boundaries",
+    "OSM bridge, tunnel, layer, ramp, and related topology semantics are combined with elevation so grade-separated crossings do not become false flat intersections",
+    "compiler fixtures cover at least one bridge/viaduct, one tunnel or below-grade segment, and one multi-level highway/ramp case representative of NYC complexity",
+    "diagnostics identify unresolved or contradictory vertical topology instead of silently flattening it"
+  ],
+  "verify": "python3 -m pytest tools/map_compiler/tests -k 'elevation or bridge or tunnel or grade'",
+  "verification": null,
+  "claim": null,
+  "handoff": null,
+  "review_of": null,
+  "correction_of": null,
+  "integration": null,
+  "evidence": null,
+  "completed_at": null,
+  "commit": null
+}
