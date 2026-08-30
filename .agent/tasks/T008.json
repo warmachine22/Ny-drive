@@ -1,0 +1,29 @@
+{
+  "id": "T008",
+  "kind": "implementation",
+  "title": "Tune controllable drift and handbrake behavior",
+  "status": "planned",
+  "priority": "high",
+  "depends_on": ["T007"],
+  "areas": ["vehicle-physics"],
+  "requirements": ["FR-007", "FR-008", "FR-011"],
+  "requires": ["repo-write", "shell"],
+  "prefers": ["browser-interaction"],
+  "acceptance": [
+    "the tire/drivetrain model has a tunable, observable transition from grip to lateral slip instead of binary traction loss",
+    "the handbrake materially changes rear-wheel braking and/or available rear grip so it can initiate or tighten rotation at appropriate speeds",
+    "countersteer and throttle can sustain and recover deliberate oversteer on representative Manhattan corners without requiring scripted drift states",
+    "optional arcade assists operate through bounded force/steering/grip adjustments and can be tuned without bypassing the rigid-body simulation",
+    "a human browser test records representative drift initiation, sustain, recovery, and low-speed stability observations alongside automated force-curve tests"
+  ],
+  "verify": "npm run check",
+  "verification": null,
+  "claim": null,
+  "handoff": null,
+  "review_of": null,
+  "correction_of": null,
+  "integration": null,
+  "evidence": null,
+  "completed_at": null,
+  "commit": null
+}
