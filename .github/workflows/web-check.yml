@@ -1,0 +1,26 @@
+name: Web runtime check
+
+on:
+  push:
+    branches:
+      - main
+      - 'roach/**'
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22.16.0'
+          cache: npm
+          cache-dependency-path: package.json
+      - name: Install dependencies
+        run: npm install --ignore-scripts
+      - name: Check runtime
+        run: npm run check
