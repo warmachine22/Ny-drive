@@ -2,7 +2,7 @@
   "id": "T005",
   "kind": "implementation",
   "title": "Implement streamed world and floating-origin runtime",
-  "status": "planned",
+  "status": "claimed",
   "priority": "high",
   "depends_on": ["T002", "T004"],
   "areas": ["streaming-runtime"],
@@ -18,7 +18,13 @@
   ],
   "verify": "npm run check",
   "verification": null,
-  "claim": null,
+  "claim": {
+    "worker": "chatgpt-nydrive-a830",
+    "claimed_at": "2026-08-30T22:02:00Z",
+    "lease_expires_at": "2026-08-31T00:02:00Z",
+    "branch": "roach/T005-chatgpt-nydrive-a830",
+    "base_commit": "10810363c026050e948a4fc529a8dac15107621f"
+  },
   "handoff": null,
   "review_of": null,
   "correction_of": null,
