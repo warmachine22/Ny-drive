@@ -35,7 +35,7 @@ async function boot(): Promise<void> {
   const render = createRenderScene(canvas);
   const physics = await createPhysicsRuntime();
   const input = new KeyboardInput();
-  const tileAdapter = new ThreeTileRuntimeAdapter(render.scene);
+  const tileAdapter = new ThreeTileRuntimeAdapter(render.scene, physics);
   const streamer = new WorldStreamer(new HttpWorldSource('/manifest.json'), tileAdapter);
   await streamer.initialize();
   const spawn = streamer.worldCenter();

@@ -1,8 +1,11 @@
 import * as THREE from 'three';
+import type { PhysicsRuntime } from '../physics/PhysicsWorld';
+import { RoadCollisionManager } from './RoadCollision';
 import type { TileRuntimeAdapter } from './WorldStreamer';
 import type { RuntimeOrigin, TilePayload, WorldPoint } from './types';
 
 interface TileVisual {
+  tile: TilePayload;
   group: THREE.Group;
   geometries: THREE.BufferGeometry[];
   physicsActive: boolean;
@@ -10,6 +13,8 @@ interface TileVisual {
 
 export class ThreeTileRuntimeAdapter implements TileRuntimeAdapter {
   private readonly visuals = new Map<string, TileVisual>();
+  private readonly collisions: RoadCollisionManager;
+  private runtimeOrigin: RuntimeOrigin = { x: 0, y: 0 };
   private readonly roadMaterial = new THREE.MeshStandardMaterial({
     color: 0x313a42,
     roughness: 0.92,
@@ -18,10 +23,16 @@ export class ThreeTileRuntimeAdapter implements TileRuntimeAdapter {
   });
   private readonly centerlineMaterial = new THREE.LineBasicMaterial({ color: 0xa7b1bb });
 
-  constructor(private readonly scene: THREE.Scene) {}
+  constructor(
+    private readonly scene: THREE.Scene,
+    physics: PhysicsRuntime,
+  ) {
+    this.collisions = new RoadCollisionManager(physics.world);
+  }
 
   attachTile(tile: TilePayload, runtimeOrigin: RuntimeOrigin): void {
     if (this.visuals.has(tile.tile_id)) return;
+    this.runtimeOrigin = { ...runtimeOrigin };
     const group = new THREE.Group();
     group.name = `world-tile:${tile.tile_id}`;
     group.position.set(tile.origin_m[0] - runtimeOrigin.x, 0.025, tile.origin_m[1] - runtimeOrigin.y);
@@ -38,7 +49,14 @@ export class ThreeTileRuntimeAdapter implements TileRuntimeAdapter {
         geometries.push(geometry);
         const mesh = new THREE.Mesh(geometry, this.roadMaterial);
         mesh.rotation.x = Math.PI / 2;
-        mesh.userData.stableId = surface.stable_id;
+        mesh.userData.roadSurface = {
+          stableId: surface.stable_id,
+          sourceId: surface.source_id,
+          sourceKey: surface.source_key,
+          featureCode: surface.feature_code,
+          subCode: surface.sub_code,
+          status: surface.status,
+        };
         group.add(mesh);
       }
     }
@@ -51,13 +69,27 @@ export class ThreeTileRuntimeAdapter implements TileRuntimeAdapter {
         );
         geometries.push(geometry);
         const line = new THREE.Line(geometry, this.centerlineMaterial);
-        line.userData.stableId = road.stable_id;
+        line.userData.road = {
+          stableId: road.stable_id,
+          sourceId: road.source_id,
+          sourceKey: road.source_key,
+          name: road.name,
+          directionality: road.directionality,
+          lanes: road.lanes,
+          lanesForward: road.lanes_forward,
+          lanesBackward: road.lanes_backward,
+          widthM: road.width_m,
+          roadClass: road.road_class,
+          layer: road.layer,
+          fromLevelCode: road.from_level_code,
+          toLevelCode: road.to_level_code,
+        };
         group.add(line);
       }
     }
 
     this.scene.add(group);
-    this.visuals.set(tile.tile_id, { group, geometries, physicsActive: false });
+    this.visuals.set(tile.tile_id, { tile, group, geometries, physicsActive: false });
   }
 
   setPhysicsActive(tileId: string, active: boolean): number {
@@ -65,27 +97,43 @@ export class ThreeTileRuntimeAdapter implements TileRuntimeAdapter {
     if (!visual && active) {
       throw new Error(`Cannot activate physics before tile render initialization: ${tileId}`);
     }
-    if (visual) visual.physicsActive = active;
-    // T006 replaces this zero-count activation hook with real Rapier road colliders.
+    if (!visual) return 0;
+
+    if (active) {
+      const colliderCount = this.collisions.activateTile(visual.tile, this.runtimeOrigin);
+      visual.physicsActive = colliderCount > 0;
+      return colliderCount;
+    }
+
+    this.collisions.deactivateTile(tileId);
+    visual.physicsActive = false;
     return 0;
   }
 
   detachTile(tileId: string): void {
     const visual = this.visuals.get(tileId);
     if (!visual) return;
+    this.collisions.deactivateTile(tileId);
     this.scene.remove(visual.group);
     for (const geometry of visual.geometries) geometry.dispose();
     this.visuals.delete(tileId);
   }
 
   rebase(shift: WorldPoint): void {
+    if (shift.x === 0 && shift.y === 0) return;
+    this.runtimeOrigin = {
+      x: this.runtimeOrigin.x + shift.x,
+      y: this.runtimeOrigin.y + shift.y,
+    };
     for (const visual of this.visuals.values()) {
       visual.group.position.x -= shift.x;
       visual.group.position.z -= shift.y;
     }
+    this.collisions.rebase(shift);
   }
 
   dispose(): void {
+    this.collisions.dispose();
     for (const tileId of [...this.visuals.keys()]) this.detachTile(tileId);
     this.roadMaterial.dispose();
     this.centerlineMaterial.dispose();
