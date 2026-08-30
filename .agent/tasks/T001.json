@@ -2,7 +2,7 @@
   "id": "T001",
   "kind": "planning",
   "title": "Plan product implementation",
-  "status": "planned",
+  "status": "claimed",
   "priority": "urgent",
   "depends_on": [
     "T000"
@@ -26,7 +26,13 @@
   ],
   "verify": null,
   "verification": null,
-  "claim": null,
+  "claim": {
+    "worker": "chatgpt-nydrive-a830",
+    "claimed_at": "2026-08-30T16:04:30Z",
+    "lease_expires_at": "2026-08-30T18:04:30Z",
+    "branch": "roach/T001-chatgpt-nydrive-a830",
+    "base_commit": "1783187ba73e6b8dbf38e366c50ef0f96ead1663"
+  },
   "handoff": null,
   "review_of": null,
   "correction_of": null,
