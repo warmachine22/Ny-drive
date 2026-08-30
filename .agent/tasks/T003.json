@@ -1,0 +1,29 @@
+{
+  "id": "T003",
+  "kind": "implementation",
+  "title": "Build NYC data ingestion and normalized map model",
+  "status": "planned",
+  "priority": "urgent",
+  "depends_on": ["T001"],
+  "areas": ["map-compiler"],
+  "requirements": ["FR-002", "FR-003", "QR-002", "QR-004", "QR-005"],
+  "requires": ["network", "repo-write", "shell"],
+  "prefers": ["web-research"],
+  "acceptance": [
+    "tools/map_compiler contains a reproducible Python project with import adapters for pinned official NYC street/road geometry and OpenStreetMap road semantics",
+    "all imported geometry is normalized into a documented meter-based project coordinate system with explicit source CRS/unit conversion and a fixed NYC project origin",
+    "the normalized road model can represent road identifiers, roadbed/surface geometry, directionality, lane metadata, road class, and bridge/tunnel/layer semantics without requiring browser-side GIS parsing",
+    "source snapshots, acquisition instructions, licenses/attribution requirements, and transformation provenance are documented without committing impractically large raw city datasets",
+    "automated compiler tests cover projection/unit conversion and representative source normalization"
+  ],
+  "verify": "python3 -m pytest tools/map_compiler/tests",
+  "verification": null,
+  "claim": null,
+  "handoff": null,
+  "review_of": null,
+  "correction_of": null,
+  "integration": null,
+  "evidence": null,
+  "completed_at": null,
+  "commit": null
+}
