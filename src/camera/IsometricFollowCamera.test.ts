@@ -8,7 +8,7 @@ describe('IsometricFollowCamera', () => {
     expect(THREE.MathUtils.radToDeg(DEFAULT_ISOMETRIC_CAMERA.pitchRad)).toBeCloseTo(58, 6);
     expect(DEFAULT_ISOMETRIC_CAMERA.distanceM).toBe(52);
     expect(DEFAULT_ISOMETRIC_CAMERA.maxLookAheadM).toBe(20);
-    expect(DEFAULT_ISOMETRIC_CAMERA.highSpeedZoom).toBeLessThan(0.8);
+    expect(DEFAULT_ISOMETRIC_CAMERA.highSpeedZoom).toBeLessThan(0.75);
   });
 
   it('smooths target movement instead of snapping to a new vehicle pose', () => {
@@ -93,6 +93,6 @@ describe('IsometricFollowCamera', () => {
     }
 
     expect(controller.debugState().zoom).toBeLessThan(idleZoom);
-    expect(controller.debugState().zoom).toBeGreaterThanOrEqual(0.77);
+    expect(controller.debugState().zoom).toBeGreaterThanOrEqual(0.71);
   });
 });
