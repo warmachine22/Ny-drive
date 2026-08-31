@@ -155,47 +155,6 @@ async function boot(): Promise<void> {
       });
   };
 
-  // Branch-only verification hook. It is registered only when the dedicated T017
-  // query parameter is present and will be deleted before merge. This makes the
-  // browser proof deterministic without changing ordinary player controls.
-  if (new URLSearchParams(window.location.search).get('verification') === 't017') {
-    const verificationWindow = window as Window & {
-      __NYDRIVE_T017__?: {
-        teleportToSupport(): Promise<{ x: number; y: number } | null>;
-      };
-    };
-    verificationWindow.__NYDRIVE_T017__ = {
-      teleportToSupport: async () => {
-        const pendingStream = streamUpdate;
-        if (pendingStream) await pendingStream;
-        const start = vehicleGlobalPosition();
-        let candidate: { x: number; y: number } | null = null;
-        for (let radius = 4; radius <= 70 && !candidate; radius += 2) {
-          for (let index = 0; index < 32; index += 1) {
-            const angle = (index / 32) * Math.PI * 2;
-            const point = {
-              x: start.x + Math.cos(angle) * radius,
-              y: start.y + Math.sin(angle) * radius,
-            };
-            if (streamer.surfaceKindAt(point) === 'support') {
-              candidate = point;
-              break;
-            }
-          }
-        }
-        if (!candidate) return null;
-        await streamer.update(candidate, floatingOrigin.origin);
-        const local = floatingOrigin.localFromGlobal(candidate);
-        vehicle.reset({ x: local.x, y: 0.65, z: local.z }, spawnPose.headingRad);
-        refreshRapierQueries();
-        vehicle.syncVisual(render.playerCar);
-        followCamera.reset(cameraMotionState());
-        fallRecovery.reset();
-        return candidate;
-      },
-    };
-  }
-
   const tick = (now: number): void => {
     const frameDelta = Math.min(Math.max((now - previous) / 1000, 0), 0.1);
     previous = now;
