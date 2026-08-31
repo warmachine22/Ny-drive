@@ -1,5 +1,6 @@
 import './styles.css';
 import { IsometricFollowCamera } from './camera/IsometricFollowCamera';
+import { FallRecoveryMonitor } from './game/FallRecovery';
 import { KeyboardInput } from './input/KeyboardInput';
 import { FixedStepRunner } from './physics/FixedStep';
 import { createPhysicsRuntime } from './physics/PhysicsWorld';
@@ -66,6 +67,7 @@ async function boot(): Promise<void> {
   const vehicle = new RaycastVehicle(physics, { x: 0, z: 0 });
   vehicle.reset({ x: 0, z: 0 }, spawnPose.headingRad);
   const fixedStep = new FixedStepRunner(FIXED_DELTA_SECONDS, 8);
+  const fallRecovery = new FallRecoveryMonitor();
   vehicle.syncVisual(render.playerCar);
 
   const followCamera = new IsometricFollowCamera(render.camera);
@@ -89,6 +91,7 @@ async function boot(): Promise<void> {
   let previous = performance.now();
   let streamUpdate: Promise<void> | null = null;
   let resetInFlight: Promise<void> | null = null;
+  let resetReason: 'manual' | 'fall' | null = null;
   let streamError: Error | null = null;
   let droppedSimulationSeconds = 0;
 
@@ -135,17 +138,20 @@ async function boot(): Promise<void> {
     vehicle.reset({ x: 0, z: 0 }, pose.headingRad);
     vehicle.syncVisual(render.playerCar);
     followCamera.reset(cameraMotionState());
+    fallRecovery.reset();
     droppedSimulationSeconds = 0;
   };
 
-  const requestReset = (): void => {
+  const requestReset = (reason: 'manual' | 'fall'): void => {
     if (resetInFlight) return;
+    resetReason = reason;
     resetInFlight = performSafeReset()
       .catch((error: unknown) => {
         streamError = error instanceof Error ? error : new Error(String(error));
       })
       .finally(() => {
         resetInFlight = null;
+        resetReason = null;
       });
   };
 
@@ -154,7 +160,10 @@ async function boot(): Promise<void> {
     previous = now;
 
     const controls = input.state.snapshot();
-    if (controls.reset) requestReset();
+    if (controls.reset) requestReset('manual');
+    if (!resetInFlight && fallRecovery.update(vehicle.localPosition().y)) {
+      requestReset('fall');
+    }
 
     if (!resetInFlight) {
       const localBeforeRebase = vehicle.localPosition();
@@ -200,10 +209,16 @@ async function boot(): Promise<void> {
     const slipDegrees = (telemetry.maxAbsSlipAngleRad * 180) / Math.PI;
     const rearSlipDegrees = (telemetry.rearMaxAbsSlipAngleRad * 180) / Math.PI;
     const yawRateDegrees = (telemetry.yawRateRadPerSec * 180) / Math.PI;
+    const resetLabel =
+      resetReason === 'fall'
+        ? ' · recovering fall…'
+        : resetReason === 'manual'
+          ? ' · resetting to road…'
+          : '';
     status?.replaceChildren(
       streamError
         ? `World streaming failed: ${streamError.message}`
-        : `${speedKph.toFixed(0)} km/h · wheels ${telemetry.contactCount}/4 · slip ${slipDegrees.toFixed(1)}° / rear ${rearSlipDegrees.toFixed(1)}° · yaw ${yawRateDegrees.toFixed(0)}°/s${telemetry.handbrakeActive ? ' · HB' : ''} · tiles ${debug.activePhysicsTiles} physics / ${debug.renderedTiles} rendered / ${debug.loadedTiles} cached · colliders ${debug.colliderCount} · origin ${origin.x.toFixed(0)}, ${origin.y.toFixed(0)} m${resetInFlight ? ' · resetting to road…' : worldReady ? '' : ' · loading road tile…'}${droppedSimulationSeconds > 0 ? ` · dropped ${(droppedSimulationSeconds * 1000).toFixed(0)} ms sim` : ''}`,
+        : `${speedKph.toFixed(0)} km/h · wheels ${telemetry.contactCount}/4 · slip ${slipDegrees.toFixed(1)}° / rear ${rearSlipDegrees.toFixed(1)}° · yaw ${yawRateDegrees.toFixed(0)}°/s${telemetry.handbrakeActive ? ' · HB' : ''} · tiles ${debug.activePhysicsTiles} physics / ${debug.renderedTiles} rendered / ${debug.loadedTiles} cached · colliders ${debug.colliderCount} · origin ${origin.x.toFixed(0)}, ${origin.y.toFixed(0)} m${resetLabel || (worldReady ? '' : ' · loading road tile…')}${droppedSimulationSeconds > 0 ? ` · dropped ${(droppedSimulationSeconds * 1000).toFixed(0)} ms sim` : ''}`,
     );
     frame = requestAnimationFrame(tick);
   };
