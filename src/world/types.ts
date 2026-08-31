@@ -6,6 +6,7 @@ export interface WorldPoint {
 export interface RuntimeOrigin extends WorldPoint {}
 
 export type TileLifecycle = 'loading' | 'ready' | 'active-physics' | 'cached' | 'unloaded';
+export type TilePoint = [number, number] | [number, number, number];
 
 export interface TileManifestEntry {
   tile_id: string;
@@ -31,8 +32,8 @@ export interface WorldManifest {
 }
 
 export interface TilePolygon {
-  outer: [number, number][];
-  holes: [number, number][][];
+  outer: TilePoint[];
+  holes: TilePoint[][];
 }
 
 export interface TileRoadSurface {
@@ -43,6 +44,9 @@ export interface TileRoadSurface {
   sub_code: number | null;
   status: string | null;
   polygons: TilePolygon[];
+  vertical_status?: 'resolved' | 'unresolved' | 'terrain-only';
+  associated_road_id?: string | null;
+  elevation_source?: string;
 }
 
 export interface TileRoad {
@@ -61,7 +65,20 @@ export interface TileRoad {
   layer: number;
   from_level_code: string | number | null;
   to_level_code: string | number | null;
-  paths: [number, number][][];
+  paths: TilePoint[][];
+  ramp?: boolean;
+  vertical_structure?: 'at-grade' | 'bridge' | 'tunnel' | 'ramp';
+  vertical_level_source?: string;
+  from_level?: number;
+  to_level?: number;
+  elevation_source?: string;
+}
+
+export interface VerticalDiagnostic {
+  severity: 'warning' | 'error';
+  code: string;
+  feature_id: string;
+  message: string;
 }
 
 export interface TilePayload {
@@ -72,6 +89,7 @@ export interface TilePayload {
   size_m: number;
   road_surfaces: TileRoadSurface[];
   roads: TileRoad[];
+  vertical_diagnostics?: VerticalDiagnostic[];
 }
 
 export interface StreamDebugSnapshot {
@@ -83,4 +101,8 @@ export interface StreamDebugSnapshot {
   renderedTiles: number;
   colliderCount: number;
   unloadedTotal: number;
+}
+
+export function tilePointElevationM(point: TilePoint): number {
+  return point[2] ?? 0;
 }
