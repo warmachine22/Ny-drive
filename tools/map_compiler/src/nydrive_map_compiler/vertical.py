@@ -98,8 +98,8 @@ class RoadVerticalProfile:
 
     def elevation_at(self, x: float, y: float) -> float:
         best: tuple[float, float] | None = None
+        point = Point(x, y)
         for path in self.paths:
-            point = Point(x, y)
             distance = path.line.distance(point)
             elevation = path.elevation_at(x, y)
             if best is None or distance < best[0]:
@@ -277,6 +277,21 @@ def _path_cumulative_distances(path: Sequence[Point2D]) -> tuple[list[float], fl
     return distances, total
 
 
+def _path_with_midspan(path: Sequence[Point2D]) -> tuple[Point2D, ...]:
+    if len(path) < 2:
+        return tuple(path)
+    cumulative, length = _path_cumulative_distances(path)
+    if length <= 1e-9:
+        return tuple(path)
+    line = LineString([(point.x, point.y) for point in path])
+    sample_distances = sorted({*cumulative, length / 2.0})
+    result: list[Point2D] = []
+    for distance in sample_distances:
+        sampled = line.interpolate(distance)
+        result.append(Point2D(float(sampled.x), float(sampled.y)))
+    return tuple(result)
+
+
 def _build_path_profile(
     road: RoadCenterline,
     path: Sequence[Point2D],
@@ -289,12 +304,16 @@ def _build_path_profile(
     clearance_envelope_m: float = 0.0,
 ) -> RoadPathProfile:
     stable_id = f"{road.provenance.source_key}:{road.source_id}"
-    distances, length = _path_cumulative_distances(path)
+    profile_path = _path_with_midspan(path) if clearance_envelope_m > 0.0 else tuple(path)
+    distances, length = _path_cumulative_distances(profile_path)
     if structure_kind == "at-grade":
-        elevations = [_sample_or_diagnose(sampler, point, diagnostics, stable_id) for point in path]
+        elevations = [
+            _sample_or_diagnose(sampler, point, diagnostics, stable_id)
+            for point in profile_path
+        ]
     else:
-        start_terrain = _sample_or_diagnose(sampler, path[0], diagnostics, stable_id)
-        end_terrain = _sample_or_diagnose(sampler, path[-1], diagnostics, stable_id)
+        start_terrain = _sample_or_diagnose(sampler, profile_path[0], diagnostics, stable_id)
+        end_terrain = _sample_or_diagnose(sampler, profile_path[-1], diagnostics, stable_id)
         elevations = []
         for distance in distances:
             t = 0.0 if length <= 1e-9 else distance / length
@@ -308,12 +327,12 @@ def _build_path_profile(
             elevations.append(
                 terrain_grade + level * DEFAULT_LEVEL_SEPARATION_M + envelope
             )
-    line = LineString([(point.x, point.y) for point in path])
+    line = LineString([(point.x, point.y) for point in profile_path])
     return RoadPathProfile(
         line=line,
         vertices=tuple(
             ProfileVertex(point.x, point.y, elevation)
-            for point, elevation in zip(path, elevations, strict=True)
+            for point, elevation in zip(profile_path, elevations, strict=True)
         ),
         length_m=length,
     )
@@ -337,8 +356,8 @@ class VerticalResolver:
         for road in self._roads:
             profile = self._build_road_profile(road)
             self._profiles[id(road)] = profile
-            for path in profile.paths:
-                road_geometries.append(path.line)
+            for path_profile in profile.paths:
+                road_geometries.append(path_profile.line)
                 indexed_profiles.append(profile)
         self._road_geometries = road_geometries
         self._indexed_profiles = indexed_profiles
