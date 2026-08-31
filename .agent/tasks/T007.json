@@ -2,7 +2,7 @@
   "id": "T007",
   "kind": "implementation",
   "title": "Implement vehicle rigid-body and AWD tire model",
-  "status": "planned",
+  "status": "claimed",
   "priority": "high",
   "depends_on": ["T002", "T006"],
   "areas": ["vehicle-physics"],
@@ -18,7 +18,13 @@
   ],
   "verify": "npm run check",
   "verification": null,
-  "claim": null,
+  "claim": {
+    "worker": "chatgpt-nydrive-a830",
+    "claimed_at": "2026-08-31T02:51:00Z",
+    "lease_expires_at": "2026-08-31T04:51:00Z",
+    "branch": "roach/T007-chatgpt-nydrive-a830",
+    "base_commit": "432c101280f6b144a715b74d02062478c623fd8c"
+  },
   "handoff": null,
   "review_of": null,
   "correction_of": null,
