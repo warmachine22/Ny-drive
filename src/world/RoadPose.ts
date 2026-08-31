@@ -86,7 +86,16 @@ function roadbedFallback(tile: TilePayload, query: WorldPoint): RoadPose | null 
   return best;
 }
 
-export function findNearestRoadPose(tiles: readonly TilePayload[], query: WorldPoint): RoadPose | null {
+function poseScore(pose: RoadPose, queryElevationM?: number): number {
+  if (queryElevationM === undefined || !Number.isFinite(queryElevationM)) return pose.distanceM;
+  return Math.hypot(pose.distanceM, pose.elevationM - queryElevationM);
+}
+
+export function findNearestRoadPose(
+  tiles: readonly TilePayload[],
+  query: WorldPoint,
+  queryElevationM?: number,
+): RoadPose | null {
   let bestCenterline: RoadPose | null = null;
 
   for (const tile of tiles) {
@@ -113,7 +122,10 @@ export function findNearestRoadPose(tiles: readonly TilePayload[], query: WorldP
           );
           if (!candidate) continue;
           const pose: RoadPose = { ...candidate, source: 'centerline' };
-          if (!bestCenterline || pose.distanceM < bestCenterline.distanceM) {
+          if (
+            !bestCenterline ||
+            poseScore(pose, queryElevationM) < poseScore(bestCenterline, queryElevationM)
+          ) {
             bestCenterline = pose;
           }
         }
@@ -126,7 +138,10 @@ export function findNearestRoadPose(tiles: readonly TilePayload[], query: WorldP
   let bestRoadbed: RoadPose | null = null;
   for (const tile of tiles) {
     const candidate = roadbedFallback(tile, query);
-    if (candidate && (!bestRoadbed || candidate.distanceM < bestRoadbed.distanceM)) {
+    if (
+      candidate &&
+      (!bestRoadbed || poseScore(candidate, queryElevationM) < poseScore(bestRoadbed, queryElevationM))
+    ) {
       bestRoadbed = candidate;
     }
   }
