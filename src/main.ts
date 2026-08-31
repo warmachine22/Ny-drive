@@ -60,8 +60,6 @@ async function boot(): Promise<void> {
   streamer.rebase(spawnOriginShift);
   await streamer.update(spawnPose.position, provisionalOrigin.origin);
 
-  // T006 established that Rapier world-level scene queries observe newly inserted or
-  // translated standalone road colliders after the normal world update path runs.
   physics.step(FIXED_DELTA_SECONDS);
 
   const floatingOrigin = provisionalOrigin;
@@ -200,10 +198,12 @@ async function boot(): Promise<void> {
     const origin = floatingOrigin.origin;
     const speedKph = telemetry.speedMps * 3.6;
     const slipDegrees = (telemetry.maxAbsSlipAngleRad * 180) / Math.PI;
+    const rearSlipDegrees = (telemetry.rearMaxAbsSlipAngleRad * 180) / Math.PI;
+    const yawRateDegrees = (telemetry.yawRateRadPerSec * 180) / Math.PI;
     status?.replaceChildren(
       streamError
         ? `World streaming failed: ${streamError.message}`
-        : `${speedKph.toFixed(0)} km/h · wheels ${telemetry.contactCount}/4 · slip ${slipDegrees.toFixed(1)}° · tiles ${debug.activePhysicsTiles} physics / ${debug.renderedTiles} rendered / ${debug.loadedTiles} cached · colliders ${debug.colliderCount} · origin ${origin.x.toFixed(0)}, ${origin.y.toFixed(0)} m${resetInFlight ? ' · resetting to road…' : worldReady ? '' : ' · loading road tile…'}${droppedSimulationSeconds > 0 ? ` · dropped ${(droppedSimulationSeconds * 1000).toFixed(0)} ms sim` : ''}`,
+        : `${speedKph.toFixed(0)} km/h · wheels ${telemetry.contactCount}/4 · slip ${slipDegrees.toFixed(1)}° / rear ${rearSlipDegrees.toFixed(1)}° · yaw ${yawRateDegrees.toFixed(0)}°/s${telemetry.handbrakeActive ? ' · HB' : ''} · tiles ${debug.activePhysicsTiles} physics / ${debug.renderedTiles} rendered / ${debug.loadedTiles} cached · colliders ${debug.colliderCount} · origin ${origin.x.toFixed(0)}, ${origin.y.toFixed(0)} m${resetInFlight ? ' · resetting to road…' : worldReady ? '' : ' · loading road tile…'}${droppedSimulationSeconds > 0 ? ` · dropped ${(droppedSimulationSeconds * 1000).toFixed(0)} ms sim` : ''}`,
     );
     frame = requestAnimationFrame(tick);
   };
