@@ -53,6 +53,20 @@ T009 fixes this inside `WorldStreamer`. The streamer keeps the current runtime o
 
 This keeps the correctness rule local to the streaming subsystem rather than requiring every caller to perfectly serialize network/disk completion with floating-origin movement.
 
+## Browser verification observations
+
+A production Vite build was exercised in headless Chromium with software WebGL on the T009 branch. The browser loaded the real 15-tile Flatiron fixture, accelerated and steered the dynamic vehicle, then performed a reset without a page reload or console/page error.
+
+Observed HUD states from that run:
+
+- initial: `0 km/h`, `4/4` wheel contacts, `9` physics tiles, `15` rendered/loaded tiles, `9` colliders;
+- after holding throttle and steering: about `41 km/h`, `4/4` wheel contacts, roughly `6.8°` maximum slip, with the same bounded tile/collider counts;
+- after reset: `0 km/h`, `4/4` wheel contacts and `0.0°` slip at a nearby road pose; the runtime origin changed from roughly `(1171, 3445)` m to `(1183, 3467)` m, demonstrating that recovery can relocate to a nearby road pose and keep world/physics state coherent.
+
+Visual review of the captured frames showed the fixed-world isometric angle remained readable while the car rotated, speed look-ahead exposed the approaching intersection rather than locking the vehicle dead-center, and reset returned the car upright/aligned on road geometry. The prototype car is deliberately small/simple at this stage; T008 may tune zoom/look-ahead while evaluating drift readability, and richer visual scale/presentation remains separate from the physics/camera contract.
+
+The browser run reported accumulated dropped-simulation time under the CI software-rendering environment. This is not treated as a launch-performance result; T014 owns measured hardware/browser startup, frame-time, physics-time, and hitching gates.
+
 ## Verification boundary
 
 Automated tests cover:
@@ -63,4 +77,4 @@ Automated tests cover:
 - asynchronous tile completion after floating-origin rebase;
 - all existing streaming, collision, vehicle, tire, and fixed-step tests.
 
-Subjective camera readability and driving feel still require a real browser interaction pass. T008 should record those observations while tuning drift/handbrake behavior; T014 will add the final browser smoke/performance gate.
+The T009 production browser pass additionally verified the real viewport, driving controls, camera framing, reset behavior, and absence of browser console/page errors. T008 should perform a similar browser-observation pass while tuning drift/handbrake behavior; T014 will add the final persistent browser smoke/performance gate.
