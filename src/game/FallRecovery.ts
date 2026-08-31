@@ -1,12 +1,15 @@
-export const DEFAULT_FALL_RECOVERY_Y_M = -5;
+export const DEFAULT_FALL_RECOVERY_DROP_M = 5;
 
 export class FallRecoveryMonitor {
   private latched = false;
 
-  constructor(readonly thresholdY = DEFAULT_FALL_RECOVERY_Y_M) {}
+  constructor(readonly dropBelowSurfaceM = DEFAULT_FALL_RECOVERY_DROP_M) {}
 
-  update(positionY: number): boolean {
-    const lost = !Number.isFinite(positionY) || positionY < this.thresholdY;
+  update(positionY: number, referenceSurfaceY = 0): boolean {
+    const lost =
+      !Number.isFinite(positionY) ||
+      !Number.isFinite(referenceSurfaceY) ||
+      positionY < referenceSurfaceY - this.dropBelowSurfaceM;
     if (!lost) {
       this.latched = false;
       return false;
