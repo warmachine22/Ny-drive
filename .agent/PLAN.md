@@ -19,7 +19,7 @@ Use Three.js with **WebGLRenderer/WebGL2 as the initial compatibility baseline**
 
 ### Coordinate model
 
-- Source datasets may arrive in different projections/units; the compiler converts them into a single projected CRS expressed in meters (initially UTM zone 18N / EPSG:32618 unless validation identifies a more suitable NYC-local metric CRS).
+- Source datasets may arrive in different projections/units; the compiler converts them into **EPSG:32118 (NAD83 / New York Long Island), expressed in meters**. NYC centerline inputs published in EPSG:2263 are converted explicitly rather than treated as metric coordinates.
 - The compiler subtracts a fixed NYC project origin so stored world coordinates are meter-based and reasonably small.
 - World tiles use deterministic meter-aligned origins; geometry inside each tile is stored tile-local.
 - The browser maintains a floating runtime origin and rebases loaded tiles around the vehicle when necessary. Geographic identity remains in immutable world/tile coordinates so rebasing never changes real distances.
