@@ -1,13 +1,18 @@
 import * as THREE from 'three';
 import type { PhysicsRuntime } from '../physics/PhysicsWorld';
-import { RoadCollisionManager } from './RoadCollision';
+import { buildRoadSurfaceCollisionMesh, RoadCollisionManager } from './RoadCollision';
 import {
   isFlatSupportEligible,
   SUPPORT_SURFACE_Y_M,
   SupportGroundManager,
 } from './SupportGround';
 import type { TileRuntimeAdapter } from './WorldStreamer';
-import type { RuntimeOrigin, TilePayload, WorldPoint } from './types';
+import {
+  tilePointElevationM,
+  type RuntimeOrigin,
+  type TilePayload,
+  type WorldPoint,
+} from './types';
 
 interface TileVisual {
   tile: TilePayload;
@@ -52,7 +57,7 @@ export class ThreeTileRuntimeAdapter implements TileRuntimeAdapter {
     group.name = `world-tile:${tile.tile_id}`;
     group.position.set(
       tile.origin_m[0] - runtimeOrigin.x,
-      ROAD_VISUAL_Y_M,
+      0,
       tile.origin_m[1] - runtimeOrigin.y,
     );
     const geometries: THREE.BufferGeometry[] = [];
@@ -63,43 +68,46 @@ export class ThreeTileRuntimeAdapter implements TileRuntimeAdapter {
       const supportMesh = new THREE.Mesh(supportGeometry, this.supportMaterial);
       supportMesh.name = `support-ground:${tile.tile_id}`;
       supportMesh.rotation.x = -Math.PI / 2;
-      supportMesh.position.set(
-        tile.size_m / 2,
-        SUPPORT_SURFACE_Y_M - ROAD_VISUAL_Y_M,
-        tile.size_m / 2,
-      );
+      supportMesh.position.set(tile.size_m / 2, SUPPORT_SURFACE_Y_M, tile.size_m / 2);
       supportMesh.userData.supportGround = true;
       group.add(supportMesh);
     }
 
     for (const surface of tile.road_surfaces) {
-      for (const polygon of surface.polygons) {
-        if (polygon.outer.length < 3) continue;
-        const shape = new THREE.Shape(polygon.outer.map(([x, y]) => new THREE.Vector2(x, y)));
-        shape.holes = polygon.holes.map(
-          (hole) => new THREE.Path(hole.map(([x, y]) => new THREE.Vector2(x, y))),
-        );
-        const geometry = new THREE.ShapeGeometry(shape);
-        geometries.push(geometry);
-        const mesh = new THREE.Mesh(geometry, this.roadMaterial);
-        mesh.rotation.x = Math.PI / 2;
-        mesh.userData.roadSurface = {
-          stableId: surface.stable_id,
-          sourceId: surface.source_id,
-          sourceKey: surface.source_key,
-          featureCode: surface.feature_code,
-          subCode: surface.sub_code,
-          status: surface.status,
-        };
-        group.add(mesh);
-      }
+      const meshData = buildRoadSurfaceCollisionMesh(surface);
+      if (meshData.triangleCount === 0) continue;
+      const geometry = new THREE.BufferGeometry();
+      geometry.setAttribute('position', new THREE.BufferAttribute(meshData.vertices, 3));
+      geometry.setIndex(new THREE.BufferAttribute(meshData.indices, 1));
+      geometry.computeVertexNormals();
+      geometries.push(geometry);
+      const mesh = new THREE.Mesh(geometry, this.roadMaterial);
+      mesh.position.y = ROAD_VISUAL_Y_M;
+      mesh.userData.roadSurface = {
+        stableId: surface.stable_id,
+        sourceId: surface.source_id,
+        sourceKey: surface.source_key,
+        featureCode: surface.feature_code,
+        subCode: surface.sub_code,
+        status: surface.status,
+        verticalStatus: surface.vertical_status ?? 'flat-schema-v1',
+        associatedRoadId: surface.associated_road_id ?? null,
+      };
+      group.add(mesh);
     }
 
     for (const road of tile.roads) {
       for (const path of road.paths) {
         if (path.length < 2) continue;
         const geometry = new THREE.BufferGeometry().setFromPoints(
-          path.map(([x, y]) => new THREE.Vector3(x, 0.01, y)),
+          path.map(
+            (point) =>
+              new THREE.Vector3(
+                point[0],
+                tilePointElevationM(point) + ROAD_VISUAL_Y_M + 0.01,
+                point[1],
+              ),
+          ),
         );
         geometries.push(geometry);
         const line = new THREE.Line(geometry, this.centerlineMaterial);
@@ -117,6 +125,8 @@ export class ThreeTileRuntimeAdapter implements TileRuntimeAdapter {
           layer: road.layer,
           fromLevelCode: road.from_level_code,
           toLevelCode: road.to_level_code,
+          ramp: road.ramp ?? false,
+          verticalStructure: road.vertical_structure ?? 'flat-schema-v1',
         };
         group.add(line);
       }
