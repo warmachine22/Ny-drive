@@ -2,7 +2,7 @@
   "id": "T016",
   "kind": "implementation",
   "title": "Correct wide miniature isometric camera presentation",
-  "status": "planned",
+  "status": "claimed",
   "priority": "urgent",
   "depends_on": ["T009", "T015"],
   "areas": ["player-experience", "camera"],
@@ -18,7 +18,13 @@
   ],
   "verify": "npm run check",
   "verification": null,
-  "claim": null,
+  "claim": {
+    "worker": "chatgpt-nydrive-a830",
+    "claimed_at": "2026-08-31T06:01:00Z",
+    "lease_expires_at": "2026-08-31T08:01:00Z",
+    "branch": "roach/T016-chatgpt-nydrive-a830",
+    "base_commit": "a47985df3a0f250934f3b2c20bda4ea4ff2c0d70"
+  },
   "handoff": null,
   "review_of": null,
   "correction_of": "T009",
