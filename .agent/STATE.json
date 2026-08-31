@@ -15,10 +15,10 @@
     "status": "failed",
     "level": "quick",
     "command": "python3 scripts/roach_check.py && npm run check && python3 -m pytest tools/map_compiler/tests",
-    "notes": "exit 9009",
-    "verified_at": "2026-08-31T05:41:14Z",
-    "commit": "5df95b7d8acffcd1c378fed5dea8511cc56ae31f"
+    "notes": "exit 2",
+    "verified_at": "2026-08-31T05:43:36Z",
+    "commit": "0341f796c5a828753abac199b4031e23eb671fba"
   },
   "blocked": null,
-  "updated_at": "2026-08-31T05:41:14Z"
+  "updated_at": "2026-08-31T05:43:36Z"
 }
