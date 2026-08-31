@@ -96,6 +96,45 @@ export class WorldStreamer {
     return { x: (minX + maxX) / 2, y: (minY + maxY) / 2 };
   }
 
+  nearestLoadedRoadPoint(point: WorldPoint): WorldPoint | null {
+    let nearest: WorldPoint | null = null;
+    let nearestDistance = Number.POSITIVE_INFINITY;
+
+    for (const record of this.records.values()) {
+      const tile = record.data;
+      if (!tile) continue;
+      for (const surface of tile.road_surfaces) {
+        for (const polygon of surface.polygons) {
+          const ring = polygon.outer;
+          if (ring.length < 3) continue;
+          const end = ring.length > 1 && ring[0]?.[0] === ring[ring.length - 1]?.[0] && ring[0]?.[1] === ring[ring.length - 1]?.[1]
+            ? ring.length - 1
+            : ring.length;
+          if (end < 3) continue;
+          let localX = 0;
+          let localY = 0;
+          for (let index = 0; index < end; index += 1) {
+            const vertex = ring[index];
+            if (!vertex) continue;
+            localX += vertex[0];
+            localY += vertex[1];
+          }
+          const candidate = {
+            x: tile.origin_m[0] + localX / end,
+            y: tile.origin_m[1] + localY / end,
+          };
+          const distance = Math.hypot(candidate.x - point.x, candidate.y - point.y);
+          if (distance < nearestDistance) {
+            nearest = candidate;
+            nearestDistance = distance;
+          }
+        }
+      }
+    }
+
+    return nearest;
+  }
+
   async update(playerGlobal: WorldPoint, runtimeOrigin: RuntimeOrigin): Promise<void> {
     const manifest = this.requireManifest();
     const physics = selectTiles(manifest, playerGlobal, this.config.physicsRadiusM);

@@ -15,6 +15,7 @@
     "memory/collider counts return toward a bounded steady state after leaving regions rather than growing monotonically with total distance traveled",
     "human browser verification records that steering, braking, AWD grip/slip, handbrake drift initiation/recovery, isometric camera readability, and reset are usable on the real road world",
     "simplified scenery and road geography make representative NYC areas spatially recognizable without requiring photorealistic landmark art",
+    "production startup profiling records initial JS/WASM transfer size, parse/initialization time, and time-to-drive; the T007 baseline warning that Rapier is eagerly bundled (about 3.43 MB minified / 1.24 MB gzip in that build) is either accepted with evidence or addressed with practical code splitting",
     "automated browser smoke coverage is added to .agent/VERIFY.json and required license/attribution notices are present in the distributable build"
   ],
   "verify": null,
