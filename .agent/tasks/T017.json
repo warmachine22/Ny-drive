@@ -2,7 +2,7 @@
   "id": "T017",
   "kind": "implementation",
   "title": "Add non-road ground support and automatic fall recovery",
-  "status": "claimed",
+  "status": "done",
   "priority": "high",
   "depends_on": ["T006", "T009"],
   "areas": ["world-runtime", "player-experience"],
@@ -17,19 +17,22 @@
     "automated tests cover support lifecycle and fall-recovery triggering, and a browser pass demonstrates a controlled road departure and recovery"
   ],
   "verify": "npm run check",
-  "verification": null,
-  "claim": {
-    "worker": "chatgpt-nydrive-a830",
-    "claimed_at": "2026-08-31T06:20:00Z",
-    "lease_expires_at": "2026-08-31T08:20:00Z",
-    "branch": "roach/T017-chatgpt-nydrive-a830",
-    "base_commit": "cbf1e9639f7a186f257c030a1b182a37610d3809"
-  },
-  "handoff": "Keep Roadbed at y=0 as authoritative driving contact. Prototype support should sit below it and be omitted for tiles whose bridge/tunnel/layer semantics make a flat support slab unsafe; T010 will replace this flat-fixture support strategy with real terrain/elevation semantics.",
+  "verification": "PR #10 final reconciled head passed hosted npm run check, project health, lint/types/schemas, and both Ubuntu and Windows Roach coordination validation. Temporary Chromium verification artifact 9747980822 placed the real dynamic chassis on a loaded point classified as support, confirmed stable 4/4 wheel contact, and normal R recovery returned it to Roadbed with 4/4 contacts and no browser/page errors. Temporary verification hook/workflow were removed before merge.",
+  "claim": null,
+  "handoff": null,
   "review_of": null,
   "correction_of": null,
-  "integration": null,
-  "evidence": null,
-  "completed_at": null,
-  "commit": null
+  "integration": {
+    "branch": "roach/T017-chatgpt-nydrive-a830",
+    "merge_commit": "92892af0234b24b2999f46952f2d94321292864a",
+    "level": "quick",
+    "verified_at": "2026-08-31T17:16:51Z"
+  },
+  "evidence": {
+    "work": "Streamed below-Roadbed support ground, grade-separation eligibility guard, bounded support render/physics lifecycle, surface classification diagnostics, and one-shot automatic fall recovery merged through PR #10. Browser artifact 9747980822 verified real Rapier support contact and normal safe-road reset behavior.",
+    "work_waived": false,
+    "task_check": "passed"
+  },
+  "completed_at": "2026-08-31T17:16:51Z",
+  "commit": "92892af0234b24b2999f46952f2d94321292864a"
 }
