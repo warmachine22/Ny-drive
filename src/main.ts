@@ -202,6 +202,7 @@ async function boot(): Promise<void> {
 
     const playerGlobal = vehicleGlobalPosition();
     const worldReady = streamer.isPhysicsReadyAt(playerGlobal);
+    const surface = streamer.surfaceKindAt(playerGlobal);
     const debug = streamer.debugSnapshot();
     const telemetry = vehicle.telemetry();
     const origin = floatingOrigin.origin;
@@ -218,7 +219,7 @@ async function boot(): Promise<void> {
     status?.replaceChildren(
       streamError
         ? `World streaming failed: ${streamError.message}`
-        : `${speedKph.toFixed(0)} km/h · wheels ${telemetry.contactCount}/4 · slip ${slipDegrees.toFixed(1)}° / rear ${rearSlipDegrees.toFixed(1)}° · yaw ${yawRateDegrees.toFixed(0)}°/s${telemetry.handbrakeActive ? ' · HB' : ''} · tiles ${debug.activePhysicsTiles} physics / ${debug.renderedTiles} rendered / ${debug.loadedTiles} cached · colliders ${debug.colliderCount} · origin ${origin.x.toFixed(0)}, ${origin.y.toFixed(0)} m${resetLabel || (worldReady ? '' : ' · loading road tile…')}${droppedSimulationSeconds > 0 ? ` · dropped ${(droppedSimulationSeconds * 1000).toFixed(0)} ms sim` : ''}`,
+        : `${speedKph.toFixed(0)} km/h · wheels ${telemetry.contactCount}/4 · surface ${surface} · slip ${slipDegrees.toFixed(1)}° / rear ${rearSlipDegrees.toFixed(1)}° · yaw ${yawRateDegrees.toFixed(0)}°/s${telemetry.handbrakeActive ? ' · HB' : ''} · tiles ${debug.activePhysicsTiles} physics / ${debug.renderedTiles} rendered / ${debug.loadedTiles} cached · colliders ${debug.colliderCount} · origin ${origin.x.toFixed(0)}, ${origin.y.toFixed(0)} m${resetLabel || (worldReady ? '' : ' · loading road tile…')}${droppedSimulationSeconds > 0 ? ` · dropped ${(droppedSimulationSeconds * 1000).toFixed(0)} ms sim` : ''}`,
     );
     frame = requestAnimationFrame(tick);
   };
