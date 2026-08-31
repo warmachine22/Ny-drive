@@ -82,6 +82,13 @@ class FakeAdapter implements TileRuntimeAdapter {
 }
 
 describe('WorldStreamer', () => {
+  it('accepts both legacy flat schema-v1 and elevation-aware schema-v2 manifests', async () => {
+    const adapter = new FakeAdapter();
+    const elevatedManifest = { ...manifest(), schema_version: 2 };
+    const streamer = new WorldStreamer(new FakeSource(elevatedManifest), adapter);
+    await expect(streamer.initialize()).resolves.toMatchObject({ schema_version: 2 });
+  });
+
   it('bounds loaded state by the cache policy and releases tiles left behind', async () => {
     const adapter = new FakeAdapter();
     const streamer = new WorldStreamer(new FakeSource(), adapter, {
