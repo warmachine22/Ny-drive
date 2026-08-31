@@ -2,7 +2,7 @@
   "id": "T015",
   "kind": "implementation",
   "title": "Correct reversed steering controls",
-  "status": "claimed",
+  "status": "done",
   "priority": "high",
   "depends_on": [
     "T009"
@@ -28,14 +28,8 @@
     "Right/ D input turns the car visually right and left/ A input turns the car visually left in the running browser game; automated coverage protects the steering sign convention."
   ],
   "verify": null,
-  "verification": null,
-  "claim": {
-    "worker": "codex-steering-20260831",
-    "claimed_at": "2026-08-31T05:37:22Z",
-    "lease_expires_at": "2026-08-31T07:37:22Z",
-    "branch": "roach/T015-codex-steering-20260831",
-    "base_commit": "92b8656455c401a79472c94769e63550ba08657d"
-  },
+  "verification": "Corrected vehicle steering sign so semantic right/D input turns visually right and left/A input turns visually left; added regression coverage. npm run check passed; merged verification passed with 28 Vitest tests and 12 map-compiler tests.",
+  "claim": null,
   "handoff": null,
   "review_of": null,
   "correction_of": "T009",
@@ -45,7 +39,11 @@
     "level": "quick",
     "verified_at": "2026-08-31T05:46:34Z"
   },
-  "evidence": null,
-  "completed_at": null,
-  "commit": null
+  "evidence": {
+    "work": "merged as 3f9c4881",
+    "work_waived": false,
+    "task_check": "none"
+  },
+  "completed_at": "2026-08-31T05:46:56Z",
+  "commit": "2c20d8bfc3465543c93f9f6b25d7fe8d76bf0783"
 }
