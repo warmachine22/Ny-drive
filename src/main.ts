@@ -51,6 +51,7 @@ async function boot(): Promise<void> {
   await streamer.update(worldCenter, provisionalOrigin.origin);
   const spawnPose: RoadPose = streamer.nearestLoadedRoadPose(worldCenter) ?? {
     position: worldCenter,
+    elevationM: 0,
     headingRad: 0,
     source: 'roadbed',
     roadName: null,
@@ -65,7 +66,10 @@ async function boot(): Promise<void> {
 
   const floatingOrigin = provisionalOrigin;
   const vehicle = new RaycastVehicle(physics, { x: 0, z: 0 });
-  vehicle.reset({ x: 0, z: 0 }, spawnPose.headingRad);
+  vehicle.reset(
+    { x: 0, z: 0, y: spawnPose.elevationM + vehicle.config.spawnHeightM },
+    spawnPose.headingRad,
+  );
   const fixedStep = new FixedStepRunner(FIXED_DELTA_SECONDS, 8);
   const fallRecovery = new FallRecoveryMonitor();
   vehicle.syncVisual(render.playerCar);
@@ -123,8 +127,9 @@ async function boot(): Promise<void> {
     if (pendingStream) await pendingStream;
 
     const currentGlobal = vehicleGlobalPosition();
+    const currentHeight = vehicle.localPosition().y;
     await streamer.update(currentGlobal, floatingOrigin.origin);
-    const pose = streamer.nearestLoadedRoadPose(currentGlobal) ?? spawnPose;
+    const pose = streamer.nearestLoadedRoadPose(currentGlobal, currentHeight) ?? spawnPose;
 
     const shift = floatingOrigin.setOrigin(pose.position);
     if (shift.x !== 0 || shift.y !== 0) {
@@ -135,7 +140,10 @@ async function boot(): Promise<void> {
 
     await streamer.update(pose.position, floatingOrigin.origin);
     refreshRapierQueries();
-    vehicle.reset({ x: 0, z: 0 }, pose.headingRad);
+    vehicle.reset(
+      { x: 0, z: 0, y: pose.elevationM + vehicle.config.spawnHeightM },
+      pose.headingRad,
+    );
     vehicle.syncVisual(render.playerCar);
     followCamera.reset(cameraMotionState());
     fallRecovery.reset();
@@ -161,7 +169,11 @@ async function boot(): Promise<void> {
 
     const controls = input.state.snapshot();
     if (controls.reset) requestReset('manual');
-    if (!resetInFlight && fallRecovery.update(vehicle.localPosition().y)) {
+    const localHeight = vehicle.localPosition().y;
+    const recoveryReference =
+      streamer.nearestLoadedRoadPose(vehicleGlobalPosition(), localHeight)?.elevationM ??
+      spawnPose.elevationM;
+    if (!resetInFlight && fallRecovery.update(localHeight, recoveryReference)) {
       requestReset('fall');
     }
 
