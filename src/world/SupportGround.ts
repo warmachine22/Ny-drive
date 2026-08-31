@@ -1,26 +1,18 @@
 import RAPIER from '@dimforge/rapier3d-compat';
 import type { PhysicsRuntime } from '../physics/PhysicsWorld';
+import { isFlatSupportEligible } from './SurfaceQuery';
 import type { RuntimeOrigin, TilePayload, WorldPoint } from './types';
 
 type RapierWorld = PhysicsRuntime['world'];
 type RapierCollider = ReturnType<RapierWorld['createCollider']>;
+
+export { isFlatSupportEligible } from './SurfaceQuery';
 
 export const SUPPORT_SURFACE_Y_M = -0.25;
 const SUPPORT_THICKNESS_M = 0.2;
 
 interface ActiveSupport {
   collider: RapierCollider;
-}
-
-/**
- * The current development fixture is flat, but T010 will introduce real elevation,
- * bridges and tunnels. Never manufacture a flat support slab for a tile that already
- * advertises explicit vertical-road semantics; that would turn an overpass/tunnel into
- * a false intersection. T010 can replace this conservative prototype policy with real
- * terrain/elevation geometry.
- */
-export function isFlatSupportEligible(tile: TilePayload): boolean {
-  return !tile.roads.some((road) => road.bridge || road.tunnel || road.layer !== 0);
 }
 
 export class SupportGroundManager {
