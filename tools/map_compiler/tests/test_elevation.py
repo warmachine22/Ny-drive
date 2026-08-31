@@ -107,6 +107,32 @@ def test_bridge_tunnel_and_ramp_profiles_preserve_grade_separation():
     assert abs(resolver.road_elevation(bridge, 0, 0) - resolver.road_elevation(tunnel, 0, 0)) >= 9.9
 
 
+def test_at_grade_bridge_and_tunnel_endpoints_use_continuous_midspan_clearance():
+    bridge = road(
+        "bridge-at-grade-ends",
+        [(-20, 0), (20, 0)],
+        feature_type="3",
+        from_level=13,
+        to_level=13,
+    )
+    tunnel = road(
+        "tunnel-at-grade-ends",
+        [(0, -20), (0, 20)],
+        feature_type="4",
+        from_level=13,
+        to_level=13,
+    )
+    resolver = VerticalResolver([], [bridge, tunnel], ConstantElevationSampler(10.0))
+    assert resolver.road_elevation(bridge, -20, 0) == 10.0
+    assert resolver.road_elevation(bridge, 20, 0) == 10.0
+    assert resolver.road_elevation(tunnel, 0, -20) == 10.0
+    assert resolver.road_elevation(tunnel, 0, 20) == 10.0
+    assert resolver.road_elevation(bridge, 0, 0) >= 14.9
+    assert resolver.road_elevation(tunnel, 0, 0) <= 5.1
+    inferred = [item for item in resolver.diagnostics if item.code == "inferred-structure-clearance"]
+    assert len(inferred) == 2
+
+
 def test_surface_association_uses_longitudinal_overlap_not_crossing_proximity():
     bridge = road(
         "bridge",
