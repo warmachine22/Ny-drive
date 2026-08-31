@@ -23,15 +23,20 @@ export interface IsometricCameraDebugState {
   zoom: number;
 }
 
+// The Manhattan grid is rotated relative to projected X/Z. A 45-degree world yaw
+// made the real avenues/cross-streets appear almost screen-aligned, which read more
+// like a close technical map than a miniature isometric driving game. 105 degrees
+// presents the two dominant Manhattan directions as opposing diagonals while keeping
+// the camera fixed in world space through vehicle rotation.
 export const DEFAULT_ISOMETRIC_CAMERA: Readonly<IsometricCameraConfig> = {
-  yawRad: Math.PI / 4,
-  pitchRad: Math.PI / 4,
-  distanceM: 31,
-  responsePerSecond: 5.5,
-  lookAheadSeconds: 0.55,
-  maxLookAheadM: 8,
+  yawRad: THREE.MathUtils.degToRad(105),
+  pitchRad: THREE.MathUtils.degToRad(58),
+  distanceM: 52,
+  responsePerSecond: 5.2,
+  lookAheadSeconds: 0.85,
+  maxLookAheadM: 20,
   baseZoom: 1,
-  highSpeedZoom: 0.82,
+  highSpeedZoom: 0.72,
   highSpeedMps: 35,
 };
 
