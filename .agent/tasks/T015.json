@@ -39,7 +39,12 @@
   "handoff": null,
   "review_of": null,
   "correction_of": "T009",
-  "integration": null,
+  "integration": {
+    "branch": "roach/T015-codex-steering-20260831",
+    "merge_commit": "3f9c4881851403489b2fccddaec8b02e9033afe4",
+    "level": "quick",
+    "verified_at": "2026-08-31T05:46:34Z"
+  },
   "evidence": null,
   "completed_at": null,
   "commit": null

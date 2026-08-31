@@ -12,13 +12,13 @@
     "accepted_at": "2026-08-30T14:58:55Z"
   },
   "verification": {
-    "status": "failed",
+    "status": "passed",
     "level": "quick",
     "command": "python3 scripts/roach_check.py && npm run check && python3 -m pytest tools/map_compiler/tests",
-    "notes": "exit 2",
-    "verified_at": "2026-08-31T05:43:36Z",
-    "commit": "0341f796c5a828753abac199b4031e23eb671fba"
+    "notes": "exit 0",
+    "verified_at": "2026-08-31T05:46:34Z",
+    "commit": "3f9c4881851403489b2fccddaec8b02e9033afe4"
   },
   "blocked": null,
-  "updated_at": "2026-08-31T05:43:36Z"
+  "updated_at": "2026-08-31T05:46:34Z"
 }
