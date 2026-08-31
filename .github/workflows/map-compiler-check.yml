@@ -28,5 +28,7 @@ jobs:
           python-version: '3.12'
       - name: Install compiler dependencies
         run: python3 -m pip install -e 'tools/map_compiler[test]'
+      - name: Run elevation and grade-separation verification
+        run: python3 -m pytest tools/map_compiler/tests -k 'elevation or bridge or tunnel or grade'
       - name: Run compiler tests
         run: python3 -m pytest tools/map_compiler/tests
