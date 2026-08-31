@@ -1,0 +1,40 @@
+{
+  "id": "T015",
+  "kind": "implementation",
+  "title": "Correct reversed steering controls",
+  "status": "planned",
+  "priority": "high",
+  "depends_on": [
+    "T009"
+  ],
+  "areas": [
+    "player-experience"
+  ],
+  "requirements": [
+    "FR-009",
+    "FR-011",
+    "FR-012",
+    "FR-013"
+  ],
+  "requires": [
+    "repo-write",
+    "shell"
+  ],
+  "prefers": [
+    "browser-interaction",
+    "vision"
+  ],
+  "acceptance": [
+    "Right/ D input turns the car visually right and left/ A input turns the car visually left in the running browser game; automated coverage protects the steering sign convention."
+  ],
+  "verify": null,
+  "verification": null,
+  "claim": null,
+  "handoff": null,
+  "review_of": null,
+  "correction_of": "T009",
+  "integration": null,
+  "evidence": null,
+  "completed_at": null,
+  "commit": null
+}
