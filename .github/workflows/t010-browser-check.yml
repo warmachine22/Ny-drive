@@ -1,0 +1,107 @@
+name: T010 browser smoke
+
+on:
+  push:
+    branches:
+      - roach/T010-chatgpt-nydrive-0831b
+    paths:
+      - 'src/**'
+      - 'tools/map_compiler/**'
+      - 'package.json'
+      - 'package-lock.json'
+      - '.github/workflows/t010-browser-check.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  browser:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22.16.0
+      - name: Install project and browser tooling
+        run: |
+          npm install --ignore-scripts
+          npm install --no-save playwright
+          npx playwright install chromium
+      - name: Build
+        run: npm run build
+      - name: Start preview
+        run: |
+          nohup npx vite preview --host 127.0.0.1 --port 4173 > /tmp/nydrive-vite.log 2>&1 &
+          for i in {1..30}; do
+            if curl --fail --silent http://127.0.0.1:4173/ >/dev/null; then exit 0; fi
+            sleep 1
+          done
+          cat /tmp/nydrive-vite.log
+          exit 1
+      - name: Smoke real browser runtime and reset
+        run: |
+          mkdir -p browser-artifacts
+          node --input-type=module <<'NODE'
+          import fs from 'node:fs';
+          import { chromium } from 'playwright';
+
+          const browser = await chromium.launch({
+            headless: true,
+            args: ['--use-angle=swiftshader', '--enable-webgl', '--ignore-gpu-blocklist'],
+          });
+          const page = await browser.newPage({ viewport: { width: 1440, height: 900 } });
+          const errors = [];
+          page.on('console', message => {
+            if (message.type() === 'error') errors.push(message.text());
+          });
+          page.on('pageerror', error => errors.push(`pageerror: ${error.message}`));
+
+          const status = () => page.locator('.hud__status').innerText();
+          async function waitForHud(predicate, timeoutMs, description) {
+            const started = Date.now();
+            let latest = await status();
+            while (Date.now() - started < timeoutMs) {
+              latest = await status();
+              if (predicate(latest)) return latest;
+              await page.waitForTimeout(80);
+            }
+            throw new Error(`${description}; latest HUD: ${latest}`);
+          }
+
+          await page.goto('http://127.0.0.1:4173/?verification=t010', { waitUntil: 'networkidle' });
+          const initial = await waitForHud(
+            text => text.includes('surface roadbed') && text.includes('wheels 4/4'),
+            5000,
+            'Expected a stable Roadbed spawn with four wheel contacts',
+          );
+          if (initial.includes('failed')) throw new Error(`Unexpected failure HUD: ${initial}`);
+          await page.screenshot({ path: 'browser-artifacts/01-initial.png', fullPage: true });
+
+          await page.keyboard.press('r');
+          const recovered = await waitForHud(
+            text => text.includes('surface roadbed') && text.includes('wheels 4/4') && !text.includes('resetting'),
+            5000,
+            'Normal R reset did not return to stable Roadbed contact',
+          );
+          await page.screenshot({ path: 'browser-artifacts/02-reset.png', fullPage: true });
+
+          await page.waitForTimeout(600);
+          const settled = await status();
+          if (!settled.includes('surface roadbed') || !settled.includes('wheels 4/4')) {
+            throw new Error(`Roadbed state was not stable after reset; HUD: ${settled}`);
+          }
+          if (errors.length) throw new Error(`Browser/page errors: ${errors.join(' | ')}`);
+
+          fs.writeFileSync(
+            'browser-artifacts/result.json',
+            JSON.stringify({ initial, recovered, settled, errors }, null, 2),
+          );
+          await browser.close();
+          NODE
+      - uses: actions/upload-artifact@v4
+        with:
+          name: t010-browser-smoke
+          path: browser-artifacts
+          if-no-files-found: error
