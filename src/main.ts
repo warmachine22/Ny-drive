@@ -1,9 +1,11 @@
 import './styles.css';
+import { IsometricFollowCamera } from './camera/IsometricFollowCamera';
 import { KeyboardInput } from './input/KeyboardInput';
 import { FixedStepRunner } from './physics/FixedStep';
 import { createPhysicsRuntime } from './physics/PhysicsWorld';
 import { createRenderScene } from './render/createScene';
 import { RaycastVehicle } from './vehicle/RaycastVehicle';
+import type { RoadPose } from './world/RoadPose';
 import { FloatingOrigin } from './world/FloatingOrigin';
 import { ThreeTileRuntimeAdapter } from './world/ThreeTileRuntimeAdapter';
 import { WorldStreamer } from './world/WorldStreamer';
@@ -46,21 +48,38 @@ async function boot(): Promise<void> {
   const worldCenter = streamer.worldCenter();
   const provisionalOrigin = new FloatingOrigin(worldCenter, 512);
   await streamer.update(worldCenter, provisionalOrigin.origin);
-  const spawn = streamer.nearestLoadedRoadPoint(worldCenter) ?? worldCenter;
+  const spawnPose: RoadPose = streamer.nearestLoadedRoadPose(worldCenter) ?? {
+    position: worldCenter,
+    headingRad: 0,
+    source: 'roadbed',
+    roadName: null,
+    distanceM: 0,
+  };
 
-  const spawnOriginShift = provisionalOrigin.setOrigin(spawn);
+  const spawnOriginShift = provisionalOrigin.setOrigin(spawnPose.position);
   streamer.rebase(spawnOriginShift);
-  await streamer.update(spawn, provisionalOrigin.origin);
+  await streamer.update(spawnPose.position, provisionalOrigin.origin);
 
   // T006 established that Rapier world-level scene queries observe newly inserted or
   // translated standalone road colliders after the normal world update path runs.
-  // Refresh once before the vehicle begins issuing suspension rays.
   physics.step(FIXED_DELTA_SECONDS);
 
   const floatingOrigin = provisionalOrigin;
   const vehicle = new RaycastVehicle(physics, { x: 0, z: 0 });
+  vehicle.reset({ x: 0, z: 0 }, spawnPose.headingRad);
   const fixedStep = new FixedStepRunner(FIXED_DELTA_SECONDS, 8);
   vehicle.syncVisual(render.playerCar);
+
+  const followCamera = new IsometricFollowCamera(render.camera);
+  const cameraMotionState = () => {
+    const position = vehicle.localPosition();
+    const velocity = vehicle.body.linvel();
+    return {
+      position,
+      velocity: { x: velocity.x, y: velocity.y, z: velocity.z },
+    };
+  };
+  followCamera.reset(cameraMotionState());
   input.attach();
 
   const resize = (): void => render.resize(app.clientWidth, app.clientHeight);
@@ -71,6 +90,7 @@ async function boot(): Promise<void> {
   let frame = 0;
   let previous = performance.now();
   let streamUpdate: Promise<void> | null = null;
+  let resetInFlight: Promise<void> | null = null;
   let streamError: Error | null = null;
   let droppedSimulationSeconds = 0;
 
@@ -80,7 +100,7 @@ async function boot(): Promise<void> {
   };
 
   const requestStreamUpdate = (): void => {
-    if (streamUpdate) return;
+    if (streamUpdate || resetInFlight) return;
     streamUpdate = streamer
       .update(vehicleGlobalPosition(), floatingOrigin.origin)
       .catch((error: unknown) => {
@@ -97,23 +117,38 @@ async function boot(): Promise<void> {
     fixedStep.reset();
   };
 
-  const resetToSpawn = (): void => {
-    const local = vehicle.localPosition();
-    const currentGlobal = floatingOrigin.globalFromLocal({ x: local.x, z: local.z });
-    const shift = floatingOrigin.setOrigin(spawn);
+  const performSafeReset = async (): Promise<void> => {
+    const pendingStream = streamUpdate;
+    if (pendingStream) await pendingStream;
+
+    const currentGlobal = vehicleGlobalPosition();
+    await streamer.update(currentGlobal, floatingOrigin.origin);
+    const pose = streamer.nearestLoadedRoadPose(currentGlobal) ?? spawnPose;
+
+    const shift = floatingOrigin.setOrigin(pose.position);
     if (shift.x !== 0 || shift.y !== 0) {
-      streamer.rebase(shift);
       vehicle.rebase(shift);
+      streamer.rebase(shift);
+      followCamera.rebase(shift);
     }
-    vehicle.reset({ x: 0, z: 0 });
-    droppedSimulationSeconds = 0;
+
+    await streamer.update(pose.position, floatingOrigin.origin);
     refreshRapierQueries();
-    void streamer.update(spawn, floatingOrigin.origin).catch((error: unknown) => {
-      streamError = error instanceof Error ? error : new Error(String(error));
-    });
-    // Keep this read here deliberately: it makes reset geography explicit in the
-    // runtime and guards against accidentally treating local (0,0) as NYC-global.
-    void currentGlobal;
+    vehicle.reset({ x: 0, z: 0 }, pose.headingRad);
+    vehicle.syncVisual(render.playerCar);
+    followCamera.reset(cameraMotionState());
+    droppedSimulationSeconds = 0;
+  };
+
+  const requestReset = (): void => {
+    if (resetInFlight) return;
+    resetInFlight = performSafeReset()
+      .catch((error: unknown) => {
+        streamError = error instanceof Error ? error : new Error(String(error));
+      })
+      .finally(() => {
+        resetInFlight = null;
+      });
   };
 
   const tick = (now: number): void => {
@@ -121,39 +156,45 @@ async function boot(): Promise<void> {
     previous = now;
 
     const controls = input.state.snapshot();
-    if (controls.reset) resetToSpawn();
+    if (controls.reset) requestReset();
 
-    const localBeforeRebase = vehicle.localPosition();
-    const rebase = floatingOrigin.rebaseIfNeeded({
-      x: localBeforeRebase.x,
-      z: localBeforeRebase.z,
-    });
-    if (rebase) {
-      // Move dynamic and static physics by the exact same floating-origin delta.
-      // One fixed refresh step makes the translated road colliders visible to the
-      // next world-level suspension query before force application resumes.
-      vehicle.rebase(rebase.shift);
-      streamer.rebase(rebase.shift);
-      refreshRapierQueries();
-    }
-
-    const playerGlobal = vehicleGlobalPosition();
-    const worldReady = streamer.isPhysicsReadyAt(playerGlobal);
-    if (worldReady) {
-      const result = fixedStep.advance(frameDelta, (deltaSeconds) => {
-        vehicle.preStep(controls, deltaSeconds);
-        physics.step(deltaSeconds);
+    if (!resetInFlight) {
+      const localBeforeRebase = vehicle.localPosition();
+      const rebase = floatingOrigin.rebaseIfNeeded({
+        x: localBeforeRebase.x,
+        z: localBeforeRebase.z,
       });
-      droppedSimulationSeconds += result.droppedSeconds;
+      if (rebase) {
+        vehicle.rebase(rebase.shift);
+        streamer.rebase(rebase.shift);
+        followCamera.rebase(rebase.shift);
+        refreshRapierQueries();
+      }
+
+      const playerGlobal = vehicleGlobalPosition();
+      const worldReady = streamer.isPhysicsReadyAt(playerGlobal);
+      if (worldReady) {
+        const result = fixedStep.advance(frameDelta, (deltaSeconds) => {
+          vehicle.preStep(controls, deltaSeconds);
+          physics.step(deltaSeconds);
+        });
+        droppedSimulationSeconds += result.droppedSeconds;
+      } else {
+        vehicle.clearForces();
+        fixedStep.reset();
+      }
     } else {
       vehicle.clearForces();
       fixedStep.reset();
     }
 
     vehicle.syncVisual(render.playerCar);
+    followCamera.update(cameraMotionState(), frameDelta);
     requestStreamUpdate();
     render.renderer.render(render.scene, render.camera);
 
+    const playerGlobal = vehicleGlobalPosition();
+    const worldReady = streamer.isPhysicsReadyAt(playerGlobal);
     const debug = streamer.debugSnapshot();
     const telemetry = vehicle.telemetry();
     const origin = floatingOrigin.origin;
@@ -162,7 +203,7 @@ async function boot(): Promise<void> {
     status?.replaceChildren(
       streamError
         ? `World streaming failed: ${streamError.message}`
-        : `${speedKph.toFixed(0)} km/h · wheels ${telemetry.contactCount}/4 · slip ${slipDegrees.toFixed(1)}° · tiles ${debug.activePhysicsTiles} physics / ${debug.renderedTiles} rendered / ${debug.loadedTiles} cached · colliders ${debug.colliderCount} · origin ${origin.x.toFixed(0)}, ${origin.y.toFixed(0)} m${worldReady ? '' : ' · loading road tile…'}${droppedSimulationSeconds > 0 ? ` · dropped ${(droppedSimulationSeconds * 1000).toFixed(0)} ms sim` : ''}`,
+        : `${speedKph.toFixed(0)} km/h · wheels ${telemetry.contactCount}/4 · slip ${slipDegrees.toFixed(1)}° · tiles ${debug.activePhysicsTiles} physics / ${debug.renderedTiles} rendered / ${debug.loadedTiles} cached · colliders ${debug.colliderCount} · origin ${origin.x.toFixed(0)}, ${origin.y.toFixed(0)} m${resetInFlight ? ' · resetting to road…' : worldReady ? '' : ' · loading road tile…'}${droppedSimulationSeconds > 0 ? ` · dropped ${(droppedSimulationSeconds * 1000).toFixed(0)} ms sim` : ''}`,
     );
     frame = requestAnimationFrame(tick);
   };

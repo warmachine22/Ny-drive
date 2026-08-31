@@ -57,10 +57,12 @@ class FakeSource implements WorldSource {
 class FakeAdapter implements TileRuntimeAdapter {
   readonly attached = new Set<string>();
   readonly active = new Set<string>();
+  readonly attachOrigins = new Map<string, RuntimeOrigin>();
   rebases: WorldPoint[] = [];
 
-  attachTile(tile: TilePayload, _runtimeOrigin: RuntimeOrigin): void {
+  attachTile(tile: TilePayload, runtimeOrigin: RuntimeOrigin): void {
     this.attached.add(tile.tile_id);
+    this.attachOrigins.set(tile.tile_id, { ...runtimeOrigin });
   }
 
   setPhysicsActive(tileId: string, active: boolean): number {
@@ -129,6 +131,31 @@ describe('WorldStreamer', () => {
     resolveTile?.(payload(entry));
     await update;
     expect(streamer.isPhysicsReadyAt({ x: 100, y: 100 })).toBe(true);
+  });
+
+  it('uses the rebased runtime origin when an asynchronous tile finishes after the rebase', async () => {
+    const entry = tileEntry(0);
+    let resolveTile: ((value: TilePayload) => void) | undefined;
+    const source: WorldSource = {
+      loadManifest: () => Promise.resolve({ ...manifest(), tile_count: 1, tiles: [entry] }),
+      loadTile: () => new Promise<TilePayload>((resolve) => { resolveTile = resolve; }),
+    };
+    const adapter = new FakeAdapter();
+    const streamer = new WorldStreamer(source, adapter, {
+      physicsRadiusM: 0,
+      renderRadiusM: 0,
+      cacheRadiusM: 0,
+    });
+    await streamer.initialize();
+
+    const update = streamer.update({ x: 100, y: 100 }, { x: 0, y: 0 });
+    expect(resolveTile).toBeDefined();
+    streamer.rebase({ x: 512, y: -256 });
+    resolveTile?.(payload(entry));
+    await update;
+
+    expect(adapter.attachOrigins.get('0:0')).toEqual({ x: 512, y: -256 });
+    expect(adapter.rebases).toEqual([{ x: 512, y: -256 }]);
   });
 
   it('forwards floating-origin shifts without changing tile identities', async () => {

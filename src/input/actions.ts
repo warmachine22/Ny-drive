@@ -36,9 +36,13 @@ export function actionForKey(code: string): DrivingAction | undefined {
 
 export class DrivingInputState {
   private readonly active = new Set<DrivingAction>();
+  private resetPending = false;
 
   set(action: DrivingAction, pressed: boolean): void {
     if (pressed) {
+      if (action === 'reset' && !this.active.has('reset')) {
+        this.resetPending = true;
+      }
       this.active.add(action);
     } else {
       this.active.delete(action);
@@ -47,18 +51,21 @@ export class DrivingInputState {
 
   clear(): void {
     this.active.clear();
+    this.resetPending = false;
   }
 
   snapshot(): DrivingInputSnapshot {
     const left = this.active.has('steerLeft') ? 1 : 0;
     const right = this.active.has('steerRight') ? 1 : 0;
+    const reset = this.resetPending;
+    this.resetPending = false;
 
     return {
       steer: right - left,
       throttle: this.active.has('throttle') ? 1 : 0,
       brakeReverse: this.active.has('brakeReverse') ? 1 : 0,
       handbrake: this.active.has('handbrake'),
-      reset: this.active.has('reset'),
+      reset,
     };
   }
 }

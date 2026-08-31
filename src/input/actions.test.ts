@@ -28,4 +28,19 @@ describe('driving action mapping', () => {
     state.clear();
     expect(state.snapshot().steer).toBe(0);
   });
+
+  it('emits reset once per key press rather than once per held frame', () => {
+    const state = new DrivingInputState();
+    state.set('reset', true);
+    state.set('reset', true);
+    expect(state.snapshot().reset).toBe(true);
+    expect(state.snapshot().reset).toBe(false);
+
+    state.set('reset', true);
+    expect(state.snapshot().reset).toBe(false);
+
+    state.set('reset', false);
+    state.set('reset', true);
+    expect(state.snapshot().reset).toBe(true);
+  });
 });
