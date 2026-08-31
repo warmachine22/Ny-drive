@@ -36,7 +36,7 @@ export const DEFAULT_ISOMETRIC_CAMERA: Readonly<IsometricCameraConfig> = {
   lookAheadSeconds: 0.85,
   maxLookAheadM: 20,
   baseZoom: 1,
-  highSpeedZoom: 0.78,
+  highSpeedZoom: 0.72,
   highSpeedMps: 35,
 };
 
