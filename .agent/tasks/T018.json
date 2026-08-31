@@ -1,0 +1,29 @@
+{
+  "id": "T018",
+  "kind": "implementation",
+  "title": "Add minimap and current road identity HUD",
+  "status": "planned",
+  "priority": "normal",
+  "depends_on": ["T003", "T005", "T009"],
+  "areas": ["player-experience", "navigation-ui"],
+  "requirements": ["FR-003", "FR-009", "FR-011"],
+  "requires": ["repo-write", "shell"],
+  "prefers": ["browser-interaction", "vision"],
+  "acceptance": [
+    "a compact always-available minimap uses the already-streamed compiled road centerlines/road metadata and shows the player's local surroundings plus heading without introducing a second city-map download path",
+    "the HUD identifies the nearest/current named street, avenue, boulevard, highway, ramp, or other road when source data supplies a name and shows a concise road-class label derived from source metadata rather than invented precision",
+    "the minimap provides enough surrounding road context to see nearby turns/connections while remaining visually subordinate to the main driving view",
+    "road identity updates remain stable near intersections and degrade gracefully when names/classes are missing or ambiguous",
+    "unit tests cover nearest-road identity selection and minimap coordinate projection, and browser verification records readability while driving the Manhattan fixture"
+  ],
+  "verify": "npm run check",
+  "verification": null,
+  "claim": null,
+  "handoff": null,
+  "review_of": null,
+  "correction_of": null,
+  "integration": null,
+  "evidence": null,
+  "completed_at": null,
+  "commit": null
+}
