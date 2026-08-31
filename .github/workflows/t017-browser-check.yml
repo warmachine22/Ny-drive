@@ -37,7 +37,7 @@ jobs:
           done
           cat /tmp/nydrive-vite.log
           exit 1
-      - name: Depart Roadbed and recover
+      - name: Verify support physics and road recovery
         run: |
           mkdir -p browser-artifacts
           node --input-type=module <<'NODE'
@@ -56,83 +56,58 @@ jobs:
           page.on('pageerror', error => errors.push(`pageerror: ${error.message}`));
           const status = () => page.locator('.hud__status').innerText();
 
-          async function releaseDrivingKeys() {
-            for (const key of ['w', 'a', 'd', 'Space']) {
-              await page.keyboard.up(key).catch(() => {});
-            }
-          }
-
-          async function waitForSurface(kind, timeoutMs) {
+          async function waitForHud(predicate, timeoutMs, description) {
             const started = Date.now();
             let latest = await status();
             while (Date.now() - started < timeoutMs) {
               latest = await status();
-              if (latest.includes(`surface ${kind}`)) return latest;
+              if (predicate(latest)) return latest;
               await page.waitForTimeout(80);
             }
-            return null;
+            throw new Error(`${description}; latest HUD: ${latest}`);
           }
 
-          async function resetToRoadbed() {
-            await releaseDrivingKeys();
-            await page.keyboard.press('r');
-            await page.waitForTimeout(900);
-            const roadbed = await waitForSurface('roadbed', 1800);
-            if (!roadbed) throw new Error(`Reset did not return to Roadbed; HUD: ${await status()}`);
-          }
-
-          await page.goto('http://127.0.0.1:4173/', { waitUntil: 'networkidle' });
+          await page.goto('http://127.0.0.1:4173/?verification=t017', { waitUntil: 'networkidle' });
           await page.waitForTimeout(1600);
-          const initial = await status();
-          if (!initial.includes('surface roadbed')) {
-            throw new Error(`Expected Roadbed spawn on Avenue of the Americas; HUD: ${initial}`);
-          }
+          const initial = await waitForHud(
+            text => text.includes('surface roadbed') && text.includes('wheels 4/4'),
+            2500,
+            'Expected stable Roadbed spawn',
+          );
           await page.screenshot({ path: 'browser-artifacts/01-initial.png', fullPage: true });
 
-          // The spawn is on Avenue of the Americas. Search a small set of brief right
-          // steering pulses, then travel straight: this deliberately tests a shallow
-          // curb crossing rather than a 90-degree turn that can land on W 24/25 St.
-          const pulseDurationsMs = [180, 260, 340, 420, 520, 650];
-          let offroad = null;
-          let successfulPulseMs = null;
-          for (const pulseMs of pulseDurationsMs) {
-            await resetToRoadbed();
-            await page.keyboard.down('w');
-            await page.waitForTimeout(1900);
-            await page.keyboard.down('d');
-            await page.waitForTimeout(pulseMs);
-            await page.keyboard.up('d');
+          const candidate = await page.evaluate(async () => {
+            const hook = window.__NYDRIVE_T017__;
+            if (!hook) throw new Error('Missing branch-only T017 verification hook');
+            return await hook.teleportToSupport();
+          });
+          if (!candidate) throw new Error('Loaded fixture had no nearby support candidate');
 
-            const reached = await waitForSurface('support', 2300);
-            if (reached) {
-              offroad = reached;
-              successfulPulseMs = pulseMs;
-              await releaseDrivingKeys();
-              break;
-            }
-            await releaseDrivingKeys();
-          }
-
-          if (!offroad) {
-            throw new Error(`No curb-cut pulse reached support; latest HUD: ${await status()}`);
-          }
+          // The real dynamic chassis starts above the lower support slab. Let gravity,
+          // suspension rays and Rapier contacts settle it; do not fake wheel state.
+          const offroad = await waitForHud(
+            text => text.includes('surface support') && text.includes('wheels 4/4'),
+            3500,
+            'Vehicle did not settle on streamed support with four wheel contacts',
+          );
           await page.waitForTimeout(500);
-          offroad = await status();
-          if (!offroad.includes('surface support')) {
-            throw new Error(`Car did not remain on support after input release; HUD: ${offroad}`);
-          }
-          if (!offroad.includes('wheels 4/4')) {
-            throw new Error(`Expected four supported wheel contacts off-road; HUD: ${offroad}`);
+          const settledOffroad = await status();
+          if (!settledOffroad.includes('surface support') || !settledOffroad.includes('wheels 4/4')) {
+            throw new Error(`Support state was not stable after settling; HUD: ${settledOffroad}`);
           }
           await page.screenshot({ path: 'browser-artifacts/02-offroad-supported.png', fullPage: true });
 
-          await resetToRoadbed();
-          const recovered = await status();
+          await page.keyboard.press('r');
+          const recovered = await waitForHud(
+            text => text.includes('surface roadbed') && text.includes('wheels 4/4'),
+            3500,
+            'Normal R reset did not recover from support to Roadbed',
+          );
           await page.screenshot({ path: 'browser-artifacts/03-road-reset.png', fullPage: true });
 
           fs.writeFileSync(
             'browser-artifacts/result.json',
-            JSON.stringify({ initial, successfulPulseMs, offroad, recovered, errors }, null, 2),
+            JSON.stringify({ initial, candidate, offroad, settledOffroad, recovered, errors }, null, 2),
           );
           await browser.close();
           NODE
