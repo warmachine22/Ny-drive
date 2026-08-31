@@ -1,4 +1,5 @@
 import { findNearestRoadPose, type RoadPose } from './RoadPose';
+import { surfaceKindAtTile, type WorldSurfaceKind } from './SurfaceQuery';
 import type { WorldSource } from './WorldSource';
 import type {
   RuntimeOrigin,
@@ -110,11 +111,17 @@ export class WorldStreamer {
     return this.nearestLoadedRoadPose(point)?.position ?? null;
   }
 
+  surfaceKindAt(point: WorldPoint): WorldSurfaceKind {
+    const manifest = this.requireManifest();
+    const tileSize = manifest.coordinate_system.tile_size_m;
+    const ix = Math.floor(point.x / tileSize);
+    const iy = Math.floor(point.y / tileSize);
+    const record = this.records.get(`${ix}:${iy}`);
+    return record?.data ? surfaceKindAtTile(record.data, point) : 'none';
+  }
+
   async update(playerGlobal: WorldPoint, runtimeOrigin: RuntimeOrigin): Promise<void> {
     const manifest = this.requireManifest();
-    // Keep the current origin as mutable streamer state rather than capturing the
-    // update argument across asynchronous tile loads. A rebase that occurs while a
-    // load is pending updates this value, so completion attaches against the new origin.
     this.runtimeOrigin = { ...runtimeOrigin };
 
     const physics = selectTiles(manifest, playerGlobal, this.config.physicsRadiusM);
