@@ -30,13 +30,17 @@ export interface VehicleWheelTelemetry {
   longitudinalForceN: number;
   lateralForceN: number;
   slipAngleRad: number;
+  gripCoefficient: number;
 }
 
 export interface VehicleTelemetry {
   speedMps: number;
   steeringAngleRad: number;
+  yawRateRadPerSec: number;
   contactCount: number;
   maxAbsSlipAngleRad: number;
+  rearMaxAbsSlipAngleRad: number;
+  handbrakeActive: boolean;
   wheels: VehicleWheelTelemetry[];
 }
 
@@ -52,6 +56,11 @@ function clamp(value: number, min: number, max: number): number {
   return Math.min(max, Math.max(min, value));
 }
 
+function inverseLerpClamped(start: number, end: number, value: number): number {
+  if (end <= start) return value >= end ? 1 : 0;
+  return clamp((value - start) / (end - start), 0, 1);
+}
+
 function toThreeQuaternion(rotation: { x: number; y: number; z: number; w: number }): THREE.Quaternion {
   return new THREE.Quaternion(rotation.x, rotation.y, rotation.z, rotation.w);
 }
@@ -65,6 +74,7 @@ export class RaycastVehicle {
   readonly chassisCollider: RapierCollider;
   private readonly wheels: WheelState[];
   private steeringAngleRad = 0;
+  private handbrakeActive = false;
 
   constructor(
     private readonly physics: PhysicsRuntime,
@@ -129,6 +139,7 @@ export class RaycastVehicle {
         longitudinalForceN: 0,
         lateralForceN: 0,
         slipAngleRad: 0,
+        gripCoefficient: this.config.tireGripCoefficient,
       },
     };
   }
@@ -137,6 +148,7 @@ export class RaycastVehicle {
     if (!(deltaSeconds > 0)) return;
     this.body.resetForces(true);
     this.body.resetTorques(true);
+    this.handbrakeActive = input.handbrake;
 
     const translation = this.body.translation();
     const bodyPosition = new THREE.Vector3(translation.x, translation.y, translation.z);
@@ -239,8 +251,18 @@ export class RaycastVehicle {
       const longitudinalVelocityMps = pointVelocity.dot(wheelForward);
       const lateralVelocityMps = pointVelocity.dot(wheelRight);
       const driveShare = wheelDriveShare(wheel.axle, this.config.awdFrontBias);
+      const rearHandbrake = wheel.axle === 'rear' && input.handbrake;
+      const handbrakeSlideBlend = rearHandbrake
+        ? inverseLerpClamped(
+            this.config.handbrakeSlideStartMps,
+            this.config.handbrakeSlideFullMps,
+            Math.abs(longitudinalVelocityMps),
+          )
+        : 0;
 
       let driveForceN = input.throttle * this.config.maxDriveForceN * driveShare;
+      if (rearHandbrake) driveForceN *= this.config.handbrakeRearDriveScale;
+
       let brakeForceN = 0;
       if (input.brakeReverse > 0) {
         if (Math.abs(longitudinalVelocityMps) > 1 || input.throttle > 0) {
@@ -249,6 +271,24 @@ export class RaycastVehicle {
           driveForceN -= input.brakeReverse * this.config.maxReverseForceN * driveShare;
         }
       }
+      if (rearHandbrake) {
+        brakeForceN += this.config.handbrakeRearBrakeForceN / 2;
+      }
+
+      const axleGripScale =
+        wheel.axle === 'front' ? this.config.frontGripScale : this.config.rearGripScale;
+      const axleCorneringScale =
+        wheel.axle === 'front'
+          ? this.config.frontCorneringScale
+          : this.config.rearCorneringScale;
+      const gripCoefficient =
+        this.config.tireGripCoefficient *
+        axleGripScale *
+        THREE.MathUtils.lerp(1, this.config.handbrakeRearGripScale, handbrakeSlideBlend);
+      const corneringStiffnessNPerMps =
+        this.config.corneringStiffnessNPerMps *
+        axleCorneringScale *
+        THREE.MathUtils.lerp(1, this.config.handbrakeRearCorneringScale, handbrakeSlideBlend);
 
       const tire = computeTireForces({
         longitudinalVelocityMps,
@@ -256,8 +296,8 @@ export class RaycastVehicle {
         normalLoadN,
         driveForceN,
         brakeForceN,
-        gripCoefficient: this.config.tireGripCoefficient,
-        corneringStiffnessNPerMps: this.config.corneringStiffnessNPerMps,
+        gripCoefficient,
+        corneringStiffnessNPerMps,
       });
 
       const totalForce = contactNormal
@@ -277,6 +317,7 @@ export class RaycastVehicle {
         longitudinalForceN: tire.longitudinalForceN,
         lateralForceN: tire.lateralForceN,
         slipAngleRad: tire.slipAngleRad,
+        gripCoefficient,
       };
     }
 
@@ -302,15 +343,23 @@ export class RaycastVehicle {
 
   telemetry(): VehicleTelemetry {
     const velocity = this.body.linvel();
+    const angularVelocity = this.body.angvel();
     const wheels = this.wheels.map((wheel) => ({ ...wheel.telemetry }));
+    const rearWheels = wheels.filter((wheel) => wheel.axle === 'rear');
     return {
       speedMps: Math.hypot(velocity.x, velocity.z),
       steeringAngleRad: this.steeringAngleRad,
+      yawRateRadPerSec: angularVelocity.y,
       contactCount: wheels.filter((wheel) => wheel.contact).length,
       maxAbsSlipAngleRad: wheels.reduce(
         (maximum, wheel) => Math.max(maximum, Math.abs(wheel.slipAngleRad)),
         0,
       ),
+      rearMaxAbsSlipAngleRad: rearWheels.reduce(
+        (maximum, wheel) => Math.max(maximum, Math.abs(wheel.slipAngleRad)),
+        0,
+      ),
+      handbrakeActive: this.handbrakeActive,
       wheels,
     };
   }
@@ -350,6 +399,7 @@ export class RaycastVehicle {
     this.body.setLinvel({ x: 0, y: 0, z: 0 }, true);
     this.body.setAngvel({ x: 0, y: 0, z: 0 }, true);
     this.clearForces();
+    this.handbrakeActive = false;
     for (const wheel of this.wheels) {
       wheel.lastSuspensionLengthM = this.config.suspensionRestLengthM;
     }

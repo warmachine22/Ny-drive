@@ -20,7 +20,17 @@ export interface VehicleConfig {
   maxBrakeForceN: number;
   awdFrontBias: number;
   tireGripCoefficient: number;
+  frontGripScale: number;
+  rearGripScale: number;
   corneringStiffnessNPerMps: number;
+  frontCorneringScale: number;
+  rearCorneringScale: number;
+  handbrakeRearBrakeForceN: number;
+  handbrakeRearGripScale: number;
+  handbrakeRearCorneringScale: number;
+  handbrakeRearDriveScale: number;
+  handbrakeSlideStartMps: number;
+  handbrakeSlideFullMps: number;
   linearResistanceNPerMps: number;
   aeroResistanceNPerMpsSquared: number;
   linearDamping: number;
@@ -48,7 +58,17 @@ export const GC8_PROTOTYPE_CONFIG: Readonly<VehicleConfig> = {
   maxBrakeForceN: 14000,
   awdFrontBias: 0.45,
   tireGripCoefficient: 1.12,
+  frontGripScale: 1,
+  rearGripScale: 0.98,
   corneringStiffnessNPerMps: 2200,
+  frontCorneringScale: 1,
+  rearCorneringScale: 0.96,
+  handbrakeRearBrakeForceN: 12000,
+  handbrakeRearGripScale: 0.48,
+  handbrakeRearCorneringScale: 0.38,
+  handbrakeRearDriveScale: 0.1,
+  handbrakeSlideStartMps: 2.5,
+  handbrakeSlideFullMps: 9,
   linearResistanceNPerMps: 18,
   aeroResistanceNPerMpsSquared: 0.42,
   linearDamping: 0.05,
