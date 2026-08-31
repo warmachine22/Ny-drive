@@ -12,13 +12,13 @@
     "accepted_at": "2026-08-30T14:58:55Z"
   },
   "verification": {
-    "status": "not_run",
-    "level": null,
-    "command": null,
-    "notes": "Execution backlog initialized; product-aware verification will be extended by T002 and later compiler/browser tasks.",
-    "verified_at": null,
-    "commit": null
+    "status": "passed",
+    "level": "quick",
+    "command": "python3 scripts/roach_check.py && npm run check && python3 -m pytest tools/map_compiler/tests",
+    "notes": "Roach project health passed on hosted CI after T006 together with the product web-runtime gate, map-compiler tests, lint/schema checks, and Ubuntu/Windows coordination checks. Product verification remains valid for the merged T006 tree; later product commits must run verification again before integration.",
+    "verified_at": "2026-08-31T02:39:30Z",
+    "commit": "2584beb2b0d4cf020234ddae50b694d55c787bcb"
   },
   "blocked": null,
-  "updated_at": "2026-08-30T16:15:00Z"
+  "updated_at": "2026-08-31T02:39:30Z"
 }
