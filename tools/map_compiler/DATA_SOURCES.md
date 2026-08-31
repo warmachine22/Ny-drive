@@ -59,9 +59,11 @@ The initial source priority is:
 
 For structured segments, the compiler interpolates a continuous profile between terrain at the segment endpoints and then applies the resolved vertical level. This deliberately prevents a bridge deck from sagging onto the bare-earth terrain underneath it or a tunnel from becoming a flat surface intersection.
 
-When a bridge/tunnel semantic exists but no numeric level is available, the current compiler uses a provisional one-level separation of `5.0 m` and emits an `inferred-structure-clearance` diagnostic. **That number is a topology-preserving fallback, not a claim that the real deck clearance or tunnel depth is exactly five metres.** Difficult structures can later receive stronger source data or explicit correction rules.
+A bridge or tunnel may have at-grade endpoint codes even though its interior must be separated from a crossing. When bridge/tunnel semantics require interior separation but no stronger numeric offset is available, the compiler keeps the endpoints on their terrain grade and uses a provisional continuous mid-span clearance/depth envelope with a maximum magnitude of `5.0 m`. It emits `inferred-structure-clearance`. **That number is a topology-preserving fallback, not a claim that the real deck clearance or tunnel depth is exactly five metres.** Difficult structures can later receive stronger source data or explicit correction rules.
 
-When one Roadbed polygon overlaps comparably strong centerlines at contradictory vertical levels, the compiler reports `ambiguous-roadbed-vertical-topology` rather than choosing a flat crossing silently. Schema-v2 runtime code does not create collision geometry for unresolved Roadbed surfaces.
+Schema-v2 polygon/path output is sampled at bounded spacing so the continuous height profile is represented in compiled geometry even when source segments have sparse vertices.
+
+When one Roadbed polygon overlaps comparably strong centerlines at contradictory vertical topologies, the compiler reports `ambiguous-roadbed-vertical-topology` rather than choosing a flat crossing silently. Schema-v2 runtime code does not create collision geometry for unresolved Roadbed surfaces. Per-tile diagnostics are scoped to features in that tile so citywide warnings are not copied into every streamed payload.
 
 ## Acquisition examples
 
