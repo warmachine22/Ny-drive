@@ -14,6 +14,7 @@ from .vertical import VerticalResolver
 TILE_SIZE_M = 256.0
 ROUND_DIGITS = 3
 ELEVATION_ROUND_DIGITS = 3
+VERTICAL_SAMPLE_SPACING_M = 16.0
 EPSILON = 1e-7
 
 
@@ -81,6 +82,23 @@ def _line_parts(geometry: BaseGeometry) -> list[LineString]:
     return []
 
 
+def _densify_coords(coords, max_spacing_m: float = VERTICAL_SAMPLE_SPACING_M):
+    points = [(float(x), float(y)) for x, y, *_ in coords]
+    if len(points) < 2:
+        return points
+    result: list[tuple[float, float]] = []
+    for first, second in zip(points, points[1:]):
+        dx = second[0] - first[0]
+        dy = second[1] - first[1]
+        length = math.hypot(dx, dy)
+        steps = max(1, math.ceil(length / max_spacing_m))
+        for step in range(steps):
+            t = step / steps
+            result.append((first[0] + dx * t, first[1] + dy * t))
+    result.append(points[-1])
+    return result
+
+
 def _local_point(
     x: float,
     y: float,
@@ -101,8 +119,9 @@ def _serialize_polygon(
     vertical: VerticalResolver | None = None,
 ) -> dict[str, Any]:
     def ring_points(coords):
+        source_coords = _densify_coords(coords) if vertical is not None else list(coords)
         result = []
-        for x, y, *_ in coords:
+        for x, y, *_ in source_coords:
             elevation = (
                 vertical.surface_elevation(surface, x, y)
                 if vertical is not None and surface is not None
@@ -124,6 +143,7 @@ def _serialize_line(
     road: RoadCenterline | None = None,
     vertical: VerticalResolver | None = None,
 ) -> list[list[float]]:
+    coords = _densify_coords(line.coords) if vertical is not None else list(line.coords)
     return [
         _local_point(
             x,
@@ -131,7 +151,7 @@ def _serialize_line(
             origin,
             vertical.road_elevation(road, x, y) if vertical is not None and road is not None else None,
         )
-        for x, y, *_ in line.coords
+        for x, y, *_ in coords
     ]
 
 
@@ -164,6 +184,7 @@ def compile_tiles(
         if geometry.is_empty:
             continue
         stable_id = f"{surface.provenance.source_key}:{surface.source_id}"
+        association = vertical.surface_association(surface) if vertical is not None else None
         for ix, iy in _candidate_tiles(geometry.bounds):
             clipped = geometry.intersection(box(*tile_bounds(ix, iy)))
             parts = _polygon_parts(clipped)
@@ -183,8 +204,7 @@ def compile_tiles(
                     for part in parts
                 ],
             }
-            if vertical is not None:
-                association = vertical.surface_association(surface)
+            if vertical is not None and association is not None:
                 item["vertical_status"] = association.status
                 item["associated_road_id"] = (
                     association.road_profile.stable_id if association.road_profile is not None else None
@@ -237,12 +257,22 @@ def compile_tiles(
                 item["elevation_source"] = vertical.source_key
             target["roads"].append(item)
 
+    diagnostics = vertical.diagnostics_payload() if vertical is not None else []
     result: dict[str, dict[str, Any]] = {}
     for (ix, iy), payload in sorted(tiles.items()):
         payload["road_surfaces"].sort(key=lambda item: item["stable_id"])
         payload["roads"].sort(key=lambda item: item["stable_id"])
         if vertical is not None:
-            payload["vertical_diagnostics"] = vertical.diagnostics_payload()
+            feature_ids = {
+                item["stable_id"]
+                for collection in (payload["road_surfaces"], payload["roads"])
+                for item in collection
+            }
+            payload["vertical_diagnostics"] = [
+                diagnostic
+                for diagnostic in diagnostics
+                if diagnostic["feature_id"] in feature_ids
+            ]
         result[tile_id(ix, iy)] = payload
     return result
 
