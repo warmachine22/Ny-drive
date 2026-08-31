@@ -1,8 +1,8 @@
-import type { TilePayload, TilePolygon, WorldPoint } from './types';
+import type { TilePayload, TilePoint, TilePolygon, WorldPoint } from './types';
 
 export type WorldSurfaceKind = 'roadbed' | 'support' | 'none';
 
-function pointInRing(point: [number, number], ring: [number, number][]): boolean {
+function pointInRing(point: [number, number], ring: TilePoint[]): boolean {
   let inside = false;
   for (let i = 0, j = ring.length - 1; i < ring.length; j = i, i += 1) {
     const a = ring[i];
@@ -22,6 +22,7 @@ function pointInPolygon(point: [number, number], polygon: TilePolygon): boolean 
 }
 
 export function isFlatSupportEligible(tile: TilePayload): boolean {
+  if (tile.schema_version >= 2) return false;
   return !tile.roads.some((road) => road.bridge || road.tunnel || road.layer !== 0);
 }
 
@@ -40,6 +41,7 @@ export function surfaceKindAtTile(tile: TilePayload, point: WorldPoint): WorldSu
   }
 
   for (const surface of tile.road_surfaces) {
+    if (surface.vertical_status === 'unresolved') continue;
     for (const polygon of surface.polygons) {
       if (pointInPolygon(local, polygon)) return 'roadbed';
     }
