@@ -1,0 +1,29 @@
+{
+  "id": "T017",
+  "kind": "implementation",
+  "title": "Add non-road ground support and automatic fall recovery",
+  "status": "planned",
+  "priority": "high",
+  "depends_on": ["T006", "T009"],
+  "areas": ["world-runtime", "player-experience"],
+  "requirements": ["FR-010", "FR-012", "QR-003"],
+  "requires": ["repo-write", "shell"],
+  "prefers": ["browser-interaction", "vision"],
+  "acceptance": [
+    "slight departures from a Roadbed polygon no longer immediately enter an endless black void; the active streamed region provides a bounded non-road support/terrain surface suitable for the current flat prototype fixture",
+    "non-road support does not replace or duplicate the authoritative Roadbed driving surface and is clearly separated so T010 elevation/grade-separation work can replace or reshape terrain without creating false flat intersections",
+    "leaving the playable support region, falling below a configurable safety threshold, or otherwise entering an unrecoverable fall triggers the existing nearby-road recovery flow automatically instead of allowing an endless fall",
+    "render and physics ground/support lifecycle is bounded by the same active streaming policy rather than growing with total route distance",
+    "automated tests cover support lifecycle and fall-recovery triggering, and a browser pass demonstrates a controlled road departure and recovery"
+  ],
+  "verify": "npm run check",
+  "verification": null,
+  "claim": null,
+  "handoff": null,
+  "review_of": null,
+  "correction_of": null,
+  "integration": null,
+  "evidence": null,
+  "completed_at": null,
+  "commit": null
+}
