@@ -6,7 +6,7 @@ on:
       - roach/T017-chatgpt-nydrive-a830
     paths:
       - 'src/**'
-      - 'public/**'
+      - 'tools/map_compiler/fixtures/flatiron/compiled/**'
       - 'package.json'
       - 'package-lock.json'
       - '.github/workflows/t017-browser-check.yml'
@@ -68,34 +68,55 @@ jobs:
             while (Date.now() - started < timeoutMs) {
               latest = await status();
               if (latest.includes(`surface ${kind}`)) return latest;
-              await page.waitForTimeout(100);
+              await page.waitForTimeout(80);
             }
-            throw new Error(`Did not reach surface ${kind}; latest HUD: ${latest}`);
+            return null;
+          }
+
+          async function resetToRoadbed() {
+            await releaseDrivingKeys();
+            await page.keyboard.press('r');
+            await page.waitForTimeout(900);
+            const roadbed = await waitForSurface('roadbed', 1800);
+            if (!roadbed) throw new Error(`Reset did not return to Roadbed; HUD: ${await status()}`);
           }
 
           await page.goto('http://127.0.0.1:4173/', { waitUntil: 'networkidle' });
           await page.waitForTimeout(1600);
           const initial = await status();
           if (!initial.includes('surface roadbed')) {
-            throw new Error(`Expected roadbed spawn; HUD: ${initial}`);
+            throw new Error(`Expected Roadbed spawn on Avenue of the Americas; HUD: ${initial}`);
           }
           await page.screenshot({ path: 'browser-artifacts/01-initial.png', fullPage: true });
 
-          // Build speed, then combine steering + rear handbrake so the trajectory
-          // cuts across the curb rather than neatly following a perpendicular street.
-          // Stop inputs immediately when the runtime's loaded-polygon surface query
-          // proves that the car is over support rather than authoritative Roadbed.
-          await page.keyboard.down('w');
-          await page.waitForTimeout(1700);
-          await page.keyboard.down('d');
-          await page.keyboard.down('Space');
-          let offroad;
-          try {
-            offroad = await waitForSurface('support', 4500);
-          } finally {
+          // The spawn is on Avenue of the Americas. Search a small set of brief right
+          // steering pulses, then travel straight: this deliberately tests a shallow
+          // curb crossing rather than a 90-degree turn that can land on W 24/25 St.
+          const pulseDurationsMs = [180, 260, 340, 420, 520, 650];
+          let offroad = null;
+          let successfulPulseMs = null;
+          for (const pulseMs of pulseDurationsMs) {
+            await resetToRoadbed();
+            await page.keyboard.down('w');
+            await page.waitForTimeout(1900);
+            await page.keyboard.down('d');
+            await page.waitForTimeout(pulseMs);
+            await page.keyboard.up('d');
+
+            const reached = await waitForSurface('support', 2300);
+            if (reached) {
+              offroad = reached;
+              successfulPulseMs = pulseMs;
+              await releaseDrivingKeys();
+              break;
+            }
             await releaseDrivingKeys();
           }
-          await page.waitForTimeout(700);
+
+          if (!offroad) {
+            throw new Error(`No curb-cut pulse reached support; latest HUD: ${await status()}`);
+          }
+          await page.waitForTimeout(500);
           offroad = await status();
           if (!offroad.includes('surface support')) {
             throw new Error(`Car did not remain on support after input release; HUD: ${offroad}`);
@@ -105,14 +126,13 @@ jobs:
           }
           await page.screenshot({ path: 'browser-artifacts/02-offroad-supported.png', fullPage: true });
 
-          await page.keyboard.press('r');
-          await page.waitForTimeout(1400);
-          const recovered = await waitForSurface('roadbed', 2000);
+          await resetToRoadbed();
+          const recovered = await status();
           await page.screenshot({ path: 'browser-artifacts/03-road-reset.png', fullPage: true });
 
           fs.writeFileSync(
             'browser-artifacts/result.json',
-            JSON.stringify({ initial, offroad, recovered, errors }, null, 2),
+            JSON.stringify({ initial, successfulPulseMs, offroad, recovered, errors }, null, 2),
           );
           await browser.close();
           NODE
