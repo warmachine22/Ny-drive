@@ -1,0 +1,111 @@
+name: T008 browser drift verification
+
+on:
+  push:
+    branches:
+      - roach/T008-chatgpt-nydrive-a830
+
+permissions:
+  contents: read
+
+jobs:
+  browser:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22.16.0
+      - name: Install project and browser tooling
+        run: |
+          npm install --ignore-scripts
+          npm install --no-save playwright
+          npx playwright install chromium
+      - name: Build
+        run: npm run build
+      - name: Start preview
+        run: |
+          nohup npx vite preview --host 127.0.0.1 --port 4173 > /tmp/nydrive-vite.log 2>&1 &
+          for i in {1..30}; do
+            if curl --fail --silent http://127.0.0.1:4173/ >/dev/null; then exit 0; fi
+            sleep 1
+          done
+          cat /tmp/nydrive-vite.log
+          exit 1
+      - name: Drift, recover, and capture
+        run: |
+          mkdir -p browser-artifacts
+          node --input-type=module <<'NODE'
+          import fs from 'node:fs';
+          import { chromium } from 'playwright';
+
+          const browser = await chromium.launch({
+            headless: true,
+            args: ['--use-angle=swiftshader', '--enable-webgl', '--ignore-gpu-blocklist'],
+          });
+          const page = await browser.newPage({ viewport: { width: 1440, height: 900 } });
+          const consoleErrors = [];
+          page.on('console', (message) => {
+            if (message.type() === 'error') consoleErrors.push(message.text());
+          });
+          page.on('pageerror', (error) => consoleErrors.push(`pageerror: ${error.message}`));
+          const status = () => page.locator('.hud__status').innerText();
+
+          await page.goto('http://127.0.0.1:4173/', { waitUntil: 'networkidle' });
+          await page.waitForTimeout(1800);
+          const initialStatus = await status();
+          await page.screenshot({ path: 'browser-artifacts/01-initial.png', fullPage: true });
+
+          await page.keyboard.down('w');
+          await page.waitForTimeout(1700);
+          const approachStatus = await status();
+          await page.screenshot({ path: 'browser-artifacts/02-approach.png', fullPage: true });
+
+          await page.keyboard.down('d');
+          await page.waitForTimeout(180);
+          await page.keyboard.down(' ');
+          await page.waitForTimeout(520);
+          const handbrakeStatus = await status();
+          await page.screenshot({ path: 'browser-artifacts/03-handbrake.png', fullPage: true });
+
+          await page.keyboard.up(' ');
+          await page.keyboard.up('d');
+          await page.keyboard.down('a');
+          await page.waitForTimeout(850);
+          const countersteerStatus = await status();
+          await page.screenshot({ path: 'browser-artifacts/04-countersteer.png', fullPage: true });
+          await page.keyboard.up('a');
+          await page.waitForTimeout(550);
+          await page.keyboard.up('w');
+          const recoveryStatus = await status();
+          await page.screenshot({ path: 'browser-artifacts/05-recovery.png', fullPage: true });
+
+          await page.keyboard.press('r');
+          await page.waitForTimeout(1200);
+          await page.keyboard.down(' ');
+          await page.waitForTimeout(650);
+          const lowSpeedHandbrakeStatus = await status();
+          await page.keyboard.up(' ');
+          await page.screenshot({ path: 'browser-artifacts/06-low-speed-handbrake.png', fullPage: true });
+
+          fs.writeFileSync(
+            'browser-artifacts/result.json',
+            JSON.stringify({
+              initialStatus,
+              approachStatus,
+              handbrakeStatus,
+              countersteerStatus,
+              recoveryStatus,
+              lowSpeedHandbrakeStatus,
+              consoleErrors,
+            }, null, 2),
+          );
+          await browser.close();
+          NODE
+      - name: Upload verification artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: t008-browser-drift-verification
+          path: browser-artifacts
+          if-no-files-found: error
