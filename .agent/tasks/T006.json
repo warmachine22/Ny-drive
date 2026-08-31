@@ -2,7 +2,7 @@
   "id": "T006",
   "kind": "implementation",
   "title": "Render driveable roads and physics collision",
-  "status": "claimed",
+  "status": "done",
   "priority": "high",
   "depends_on": ["T005"],
   "areas": ["road-runtime"],
@@ -14,22 +14,25 @@
     "Rapier receives road collision geometry only for the configured physics-active tile region and removes it when those tiles deactivate",
     "road geometry follows compiled roadbed/intersection surfaces rather than drawing fixed-width ribbons from centerlines",
     "direction/lane/road-class metadata remains accessible for debugging and future presentation even though traffic rules are not enforced in the initial free-drive mode",
-    "the player vehicle can traverse the complete Manhattan fixture without falling through normal tile seams or encountering duplicate collision planes"
+    "static collision tests prove tile activation is idempotent, roadbed contact is queryable, and collision planes are removed/rebased cleanly; dynamic player traversal across tile seams is explicitly verified by T007 because T006 precedes the vehicle implementation"
   ],
   "verify": "npm run check",
-  "verification": null,
-  "claim": {
-    "worker": "chatgpt-nydrive-a830",
-    "claimed_at": "2026-08-30T22:09:00Z",
-    "lease_expires_at": "2026-08-31T00:09:00Z",
-    "branch": "roach/T006-chatgpt-nydrive-a830",
-    "base_commit": "26d9602524ebf92d6cc6fb44f0111c6d1338e18b"
-  },
+  "verification": "PR #5 merged into main as 27354af039933299f411c164c41f78de2df1bc05 after clean hosted verification. npm run check passed with TypeScript, 11 Vitest tests including real Rapier WASM ray contact, and a Vite production build. Roach project health, lint/schema, Ubuntu coordination, and Windows coordination also passed. Three.js triangulation-index handling, strict noUncheckedIndexedAccess bounds checks, upward road triangle winding, and Rapier world-query refresh behavior were corrected before merge.",
+  "claim": null,
   "handoff": null,
   "review_of": null,
   "correction_of": null,
-  "integration": null,
-  "evidence": null,
-  "completed_at": null,
-  "commit": null
+  "integration": {
+    "branch": "roach/T006-chatgpt-nydrive-a830",
+    "merge_commit": "27354af039933299f411c164c41f78de2df1bc05",
+    "level": "quick",
+    "verified_at": "2026-08-31T02:39:30Z"
+  },
+  "evidence": {
+    "work": "Roadbed-derived Three.js meshes and streamed Rapier trimesh collision, one collider per physics-active tile, metadata-preserving centerline debug objects, collider rebasing/removal, and real Rapier contact tests merged via PR #5. Dynamic seam traversal is transferred to T007 where a dynamic player vehicle exists.",
+    "work_waived": false,
+    "task_check": "passed"
+  },
+  "completed_at": "2026-08-31T02:39:30Z",
+  "commit": "27354af039933299f411c164c41f78de2df1bc05"
 }

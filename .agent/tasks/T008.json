@@ -4,7 +4,7 @@
   "title": "Tune controllable drift and handbrake behavior",
   "status": "planned",
   "priority": "high",
-  "depends_on": ["T007"],
+  "depends_on": ["T007", "T009"],
   "areas": ["vehicle-physics"],
   "requirements": ["FR-007", "FR-008", "FR-011"],
   "requires": ["repo-write", "shell"],
@@ -14,7 +14,7 @@
     "the handbrake materially changes rear-wheel braking and/or available rear grip so it can initiate or tighten rotation at appropriate speeds",
     "countersteer and throttle can sustain and recover deliberate oversteer on representative Manhattan corners without requiring scripted drift states",
     "optional arcade assists operate through bounded force/steering/grip adjustments and can be tuned without bypassing the rigid-body simulation",
-    "a human browser test records representative drift initiation, sustain, recovery, and low-speed stability observations alongside automated force-curve tests"
+    "a human browser test using the actual near-isometric follow camera records representative drift initiation, sustain, recovery, and low-speed stability observations alongside automated force-curve tests"
   ],
   "verify": "npm run check",
   "verification": null,
