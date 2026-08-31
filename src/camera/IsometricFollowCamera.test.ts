@@ -1,8 +1,16 @@
 import * as THREE from 'three';
 import { describe, expect, it } from 'vitest';
-import { IsometricFollowCamera } from './IsometricFollowCamera';
+import { DEFAULT_ISOMETRIC_CAMERA, IsometricFollowCamera } from './IsometricFollowCamera';
 
 describe('IsometricFollowCamera', () => {
+  it('uses the wide elevated Manhattan-grid presentation chosen after owner playtest', () => {
+    expect(THREE.MathUtils.radToDeg(DEFAULT_ISOMETRIC_CAMERA.yawRad)).toBeCloseTo(105, 6);
+    expect(THREE.MathUtils.radToDeg(DEFAULT_ISOMETRIC_CAMERA.pitchRad)).toBeCloseTo(58, 6);
+    expect(DEFAULT_ISOMETRIC_CAMERA.distanceM).toBe(52);
+    expect(DEFAULT_ISOMETRIC_CAMERA.maxLookAheadM).toBe(20);
+    expect(DEFAULT_ISOMETRIC_CAMERA.highSpeedZoom).toBeLessThan(0.8);
+  });
+
   it('smooths target movement instead of snapping to a new vehicle pose', () => {
     const camera = new THREE.OrthographicCamera(-10, 10, 10, -10, 0.1, 200);
     const controller = new IsometricFollowCamera(camera);
@@ -33,7 +41,7 @@ describe('IsometricFollowCamera', () => {
     });
 
     const state = controller.debugState();
-    expect(Math.hypot(state.lookAhead.x, state.lookAhead.z)).toBeLessThanOrEqual(8.0001);
+    expect(Math.hypot(state.lookAhead.x, state.lookAhead.z)).toBeLessThanOrEqual(20.0001);
     expect(state.lookAhead.y).toBe(0);
 
     const target = new THREE.Vector3(
@@ -42,10 +50,8 @@ describe('IsometricFollowCamera', () => {
       state.focus.z + state.lookAhead.z,
     );
     const offset = camera.position.clone().sub(target);
-    expect(offset.x).toBeGreaterThan(0);
     expect(offset.y).toBeGreaterThan(0);
-    expect(offset.z).toBeGreaterThan(0);
-    expect(offset.length()).toBeCloseTo(31, 5);
+    expect(offset.length()).toBeCloseTo(52, 5);
   });
 
   it('rebases camera state by the same local shift without a visual jump', () => {
@@ -67,7 +73,7 @@ describe('IsometricFollowCamera', () => {
     expect(camera.position.z).toBeCloseTo(beforeCamera.z + 256);
   });
 
-  it('zooms out modestly at speed without depending on chassis yaw/roll', () => {
+  it('zooms out materially at speed without depending on chassis yaw/roll', () => {
     const camera = new THREE.OrthographicCamera(-10, 10, 10, -10, 0.1, 200);
     const controller = new IsometricFollowCamera(camera);
     controller.reset({
@@ -87,6 +93,6 @@ describe('IsometricFollowCamera', () => {
     }
 
     expect(controller.debugState().zoom).toBeLessThan(idleZoom);
-    expect(controller.debugState().zoom).toBeGreaterThanOrEqual(0.81);
+    expect(controller.debugState().zoom).toBeGreaterThanOrEqual(0.77);
   });
 });
