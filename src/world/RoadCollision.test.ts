@@ -73,9 +73,10 @@ describe('road collision geometry', () => {
       [0, 0, 3],
     ];
     const mesh = buildRoadCollisionMesh(tile);
-    const elevations = [];
+    const elevations: number[] = [];
     for (let index = 1; index < mesh.vertices.length; index += 3) {
-      elevations.push(mesh.vertices[index]);
+      const elevation = mesh.vertices[index];
+      if (elevation !== undefined) elevations.push(elevation);
     }
     expect(Math.min(...elevations)).toBe(3);
     expect(Math.max(...elevations)).toBe(5);
