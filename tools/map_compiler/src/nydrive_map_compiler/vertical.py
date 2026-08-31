@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import math
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Iterable, Protocol, Sequence
@@ -232,13 +233,6 @@ def road_level_endpoints(road: RoadCenterline) -> tuple[int, int, str]:
     if layer != 0:
         return layer, layer, "osm-layer"
 
-    feature_type = str(road.feature_type or "").strip()
-    bridge = road.semantics.bridge or feature_type == BRIDGE_SEGMENT_TYPE
-    tunnel = road.semantics.tunnel or feature_type == TUNNEL_SEGMENT_TYPE
-    if bridge and not tunnel:
-        return 1, 1, "inferred-bridge-clearance"
-    if tunnel and not bridge:
-        return -1, -1, "inferred-tunnel-depth"
     return 0, 0, "terrain"
 
 
@@ -291,6 +285,8 @@ def _build_path_profile(
     to_level: int,
     structure_kind: str,
     diagnostics: list[VerticalDiagnostic],
+    *,
+    clearance_envelope_m: float = 0.0,
 ) -> RoadPathProfile:
     stable_id = f"{road.provenance.source_key}:{road.source_id}"
     distances, length = _path_cumulative_distances(path)
@@ -304,7 +300,14 @@ def _build_path_profile(
             t = 0.0 if length <= 1e-9 else distance / length
             terrain_grade = start_terrain + (end_terrain - start_terrain) * t
             level = from_level + (to_level - from_level) * t
-            elevations.append(terrain_grade + level * DEFAULT_LEVEL_SEPARATION_M)
+            envelope = 0.0
+            if clearance_envelope_m > 0.0:
+                envelope = math.sin(math.pi * t) * clearance_envelope_m
+                if structure_kind == "tunnel":
+                    envelope = -envelope
+            elevations.append(
+                terrain_grade + level * DEFAULT_LEVEL_SEPARATION_M + envelope
+            )
     line = LineString([(point.x, point.y) for point in path])
     return RoadPathProfile(
         line=line,
@@ -382,14 +385,19 @@ class VerticalResolver:
                 )
             )
         structure_kind = road_structure_kind(road, from_level, to_level)
-        inferred = level_source.startswith("inferred-")
-        if inferred:
+        needs_clearance_envelope = (
+            structure_kind in {"bridge", "tunnel"}
+            and from_level == 0
+            and to_level == 0
+        )
+        inferred = needs_clearance_envelope
+        if needs_clearance_envelope:
             self.diagnostics.append(
                 VerticalDiagnostic(
                     "warning",
                     "inferred-structure-clearance",
                     stable_id,
-                    f"{structure_kind} has no numeric vertical level; using {DEFAULT_LEVEL_SEPARATION_M:.1f} m per inferred level",
+                    f"{structure_kind} endpoints are at grade or lack numeric separation; using a continuous {DEFAULT_LEVEL_SEPARATION_M:.1f} m maximum mid-span clearance envelope",
                 )
             )
         path_profiles = tuple(
@@ -401,6 +409,9 @@ class VerticalResolver:
                 to_level,
                 structure_kind,
                 self.diagnostics,
+                clearance_envelope_m=(
+                    DEFAULT_LEVEL_SEPARATION_M if needs_clearance_envelope else 0.0
+                ),
             )
             for path in road.paths
             if len(path) >= 2
@@ -456,11 +467,17 @@ class VerticalResolver:
 
         ranked = sorted(scored.values(), key=lambda item: (-item[0], item[1].stable_id))
         top_score, top_profile = ranked[0]
+        top_signature = (
+            top_profile.from_level,
+            top_profile.to_level,
+            top_profile.structure_kind,
+        )
         conflicting = [
             profile
             for score, profile in ranked[1:]
             if score >= top_score * 0.60
-            and (profile.from_level, profile.to_level) != (top_profile.from_level, top_profile.to_level)
+            and (profile.from_level, profile.to_level, profile.structure_kind)
+            != top_signature
         ]
         if conflicting:
             ids = tuple(profile.stable_id for profile in [top_profile, *conflicting])
@@ -469,7 +486,7 @@ class VerticalResolver:
                     "error",
                     "ambiguous-roadbed-vertical-topology",
                     stable_id,
-                    "roadbed overlaps similarly strong centerlines at different vertical levels: "
+                    "roadbed overlaps similarly strong centerlines at different vertical topologies: "
                     + ", ".join(ids),
                 )
             )
