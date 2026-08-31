@@ -8,9 +8,14 @@ from .adapters.nyc_cscl import normalize_cscl_geojson
 from .adapters.nyc_roadbed import normalize_roadbed_geojson
 from .crs import PROJECT_CRS, PROJECT_ORIGIN_WGS84
 from .tiling import TILE_SIZE_M, compile_tiles, validate_tile_local_coordinates
+from .vertical import ElevationSampler, VerticalResolver
 
 
-def compile_snapshot(snapshot: Mapping[str, Any]) -> tuple[dict[str, Any], dict[str, dict[str, Any]]]:
+def compile_snapshot(
+    snapshot: Mapping[str, Any],
+    *,
+    elevation_sampler: ElevationSampler | None = None,
+) -> tuple[dict[str, Any], dict[str, dict[str, Any]]]:
     sources = snapshot.get("sources") or {}
     roadbed_meta = sources.get("roadbed") or {}
     centerline_meta = sources.get("centerline") or {}
@@ -22,7 +27,12 @@ def compile_snapshot(snapshot: Mapping[str, Any]) -> tuple[dict[str, Any], dict[
         snapshot["centerline"],
         source_revision=centerline_meta.get("data_revision"),
     )
-    tiles = compile_tiles(roadbed, roads)
+    vertical = (
+        VerticalResolver(roadbed, roads, elevation_sampler)
+        if elevation_sampler is not None
+        else None
+    )
+    tiles = compile_tiles(roadbed, roads, vertical=vertical)
     validate_tile_local_coordinates(tiles)
 
     tile_entries = []
@@ -40,7 +50,7 @@ def compile_snapshot(snapshot: Mapping[str, Any]) -> tuple[dict[str, Any], dict[
         )
 
     manifest = {
-        "schema_version": 1,
+        "schema_version": 2 if vertical is not None else 1,
         "name": snapshot.get("name", "unnamed-fixture"),
         "coordinate_system": {
             "crs": PROJECT_CRS.to_string(),
@@ -57,6 +67,13 @@ def compile_snapshot(snapshot: Mapping[str, Any]) -> tuple[dict[str, Any], dict[
         "tile_count": len(tiles),
         "tiles": tile_entries,
     }
+    if vertical is not None:
+        manifest["elevation"] = {
+            "source_key": vertical.source_key,
+            "units": "metres",
+            "vertical_datum": "NAVD88",
+        }
+        manifest["vertical_diagnostics"] = vertical.diagnostics_payload()
     return manifest, tiles
 
 
@@ -64,8 +81,16 @@ def load_snapshot(path: Path) -> dict[str, Any]:
     return json.loads(path.read_text(encoding="utf-8"))
 
 
-def write_compiled_fixture(snapshot_path: Path, output_dir: Path) -> dict[str, Any]:
-    manifest, tiles = compile_snapshot(load_snapshot(snapshot_path))
+def write_compiled_fixture(
+    snapshot_path: Path,
+    output_dir: Path,
+    *,
+    elevation_sampler: ElevationSampler | None = None,
+) -> dict[str, Any]:
+    manifest, tiles = compile_snapshot(
+        load_snapshot(snapshot_path),
+        elevation_sampler=elevation_sampler,
+    )
     tiles_dir = output_dir / "tiles"
     tiles_dir.mkdir(parents=True, exist_ok=True)
 
@@ -74,7 +99,10 @@ def write_compiled_fixture(snapshot_path: Path, output_dir: Path) -> dict[str, A
     for entry in manifest["tiles"]:
         payload = tiles[entry["tile_id"]]
         target = output_dir / entry["file"]
-        target.write_text(json.dumps(payload, sort_keys=True, separators=(",", ":")) + "\n", encoding="utf-8")
+        target.write_text(
+            json.dumps(payload, sort_keys=True, separators=(",", ":")) + "\n",
+            encoding="utf-8",
+        )
 
     (output_dir / "manifest.json").write_text(
         json.dumps(manifest, sort_keys=True, indent=2) + "\n",
