@@ -15,10 +15,10 @@
     "status": "passed",
     "level": "quick",
     "command": "python3 scripts/roach_check.py && npm run check && python3 -m pytest tools/map_compiler/tests",
-    "notes": "Roach project health passed on hosted CI after T006 together with the product web-runtime gate, map-compiler tests, lint/schema checks, and Ubuntu/Windows coordination checks. Product verification remains valid for the merged T006 tree; later product commits must run verification again before integration.",
-    "verified_at": "2026-08-31T02:39:30Z",
-    "commit": "2584beb2b0d4cf020234ddae50b694d55c787bcb"
+    "notes": "T007 merge-context verification passed the product web-runtime gate (strict TypeScript, 19 Vitest tests including dynamic Roadbed seam traversal, and Vite production build), Roach project health, lint/types/schemas, and Ubuntu coordination/state validation. Map-compiler behavior was unchanged by T007; its existing dedicated suite remains the compiler gate.",
+    "verified_at": "2026-08-31T03:08:30Z",
+    "commit": "bf5ba98da4528c258574ffe625f2bb69638e1ab9"
   },
   "blocked": null,
-  "updated_at": "2026-08-31T02:39:30Z"
+  "updated_at": "2026-08-31T03:08:30Z"
 }
