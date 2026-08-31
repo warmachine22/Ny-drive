@@ -1,5 +1,5 @@
 {
-  "version": 1,
+  "version": 2,
   "project_crs": "EPSG:32118",
   "project_origin_wgs84": [-74.006, 40.7128],
   "sources": [
@@ -24,6 +24,25 @@
       "update_frequency": "monthly",
       "native_crs": "EPSG:2263",
       "terms": "NYC Open Data / DCP informational-use limitations and disclaimers"
+    },
+    {
+      "key": "nyc-2017-lidar-bare-earth-dem",
+      "provider": "City of New York Office of Technology and Innovation / Quantum Spatial; distributed by NOAA Office for Coastal Management",
+      "capture_year": 2017,
+      "product": "hydro-flattened bare-earth digital elevation model",
+      "nyc_open_data_dataset_id": "7sc8-jtbz",
+      "noaa_inport_guid": "gov.noaa.nmfs.inport:64732",
+      "noaa_dataset_id": 9307,
+      "bulk_url": "https://noaa-nos-coastal-lidar-pds.s3.us-east-1.amazonaws.com/dem/NYC_topobathy_BE_DEM_2017_9307/",
+      "horizontal_crs": "EPSG:6539",
+      "vertical_crs": "EPSG:6360",
+      "horizontal_units": "US survey foot",
+      "vertical_units": "US survey foot",
+      "vertical_datum": "NAVD88 (Geoid12B)",
+      "grid_spacing": "1 ft",
+      "access": "public bulk GeoTIFF download; NOAA metadata reports no access constraints",
+      "retrieved": "2026-08-31",
+      "compiler_policy": "convert elevations to metres; use as bare-earth ground baseline rather than bridge/tunnel deck elevation"
     },
     {
       "key": "openstreetmap",
