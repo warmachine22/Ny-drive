@@ -148,7 +148,9 @@ export class RaycastVehicle {
     const linearVelocity = this.body.linvel();
     const horizontalSpeed = Math.hypot(linearVelocity.x, linearVelocity.z);
     const steeringScale = clamp(1 - (horizontalSpeed / 55) * 0.65, 0.35, 1);
-    this.steeringAngleRad = input.steer * this.config.maxSteerRad * steeringScale;
+    // Three.js positive rotation around +Y turns the vehicle's -Z forward axis left.
+    // Keep the semantic input convention intuitive: positive steer means right.
+    this.steeringAngleRad = -input.steer * this.config.maxSteerRad * steeringScale;
 
     const minSuspensionLength = Math.max(
       0.02,

@@ -54,6 +54,18 @@ describe('RaycastVehicle', () => {
     physics.dispose();
   });
 
+  it('maps positive semantic steering input to a visual right turn', async () => {
+    const physics = await createPhysicsRuntime();
+    const vehicle = new RaycastVehicle(physics);
+
+    vehicle.preStep({ ...neutralInput, steer: 1 }, 1 / 120);
+
+    expect(vehicle.telemetry().steeringAngleRad).toBeLessThan(0);
+
+    vehicle.dispose();
+    physics.dispose();
+  });
+
   it('settles four suspension contacts and accelerates through tire forces on a road plane', async () => {
     const physics = await createPhysicsRuntime();
     physics.world.createCollider(
