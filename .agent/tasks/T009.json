@@ -2,7 +2,7 @@
   "id": "T009",
   "kind": "implementation",
   "title": "Add player controls, isometric camera, and reset",
-  "status": "claimed",
+  "status": "done",
   "priority": "high",
   "depends_on": ["T007"],
   "areas": ["player-experience"],
@@ -18,19 +18,22 @@
     "the browser launches directly into free driving with the required controls and no mission/progression dependency; automated tests cover reset edge behavior, camera smoothing/look-ahead invariants, safe-road pose selection, and the streaming/rebase synchronization rule"
   ],
   "verify": "npm run check",
-  "verification": null,
-  "claim": {
-    "worker": "chatgpt-nydrive-a830",
-    "claimed_at": "2026-08-31T03:10:00Z",
-    "lease_expires_at": "2026-08-31T05:10:00Z",
-    "branch": "roach/T009-chatgpt-nydrive-a830",
-    "base_commit": "efc4213384c60708fcdca953b5928d179cded878"
-  },
+  "verification": "PR #7 final production head 1205716225bba8c36137511ce8f7e00fc9013d5c passed hosted npm run check after temporary browser tooling was removed: strict TypeScript, 27/27 Vitest tests across 11 suites, and Vite production build. Roach lint/types/schemas, project health, and Ubuntu coordination/state validation passed in merge context. A separate temporary branch-only Chromium run built the production app, loaded the real Flatiron fixture, accelerated/steered to about 41 km/h with 4/4 wheel contacts, reset to a nearby road-aligned pose with 4/4 contacts, captured initial/driving/reset screenshots, and reported no console/page errors; observations are recorded in docs/PLAYER_EXPERIENCE.md. The temporary workflow was deleted before merge.",
+  "claim": null,
   "handoff": null,
   "review_of": null,
   "correction_of": null,
-  "integration": null,
-  "evidence": null,
-  "completed_at": null,
-  "commit": null
+  "integration": {
+    "branch": "roach/T009-chatgpt-nydrive-a830",
+    "merge_commit": "152cd949dfa9cac6a9660698be7d23e9c7faba08",
+    "level": "quick",
+    "verified_at": "2026-08-31T03:21:30Z"
+  },
+  "evidence": {
+    "work": "Edge-triggered semantic reset input, fixed-world near-isometric follow camera with smoothing/look-ahead/speed zoom and exact rebase behavior, centerline-derived safe road pose with Roadbed fallback, asynchronous safe reset flow, and WorldStreamer stale-origin race regression fix merged through PR #7. Browser artifact 9744340379 visually verified initial drive, steering motion, and road-aligned reset with no console errors; durable observations live in docs/PLAYER_EXPERIENCE.md.",
+    "work_waived": false,
+    "task_check": "passed"
+  },
+  "completed_at": "2026-08-31T03:21:30Z",
+  "commit": "152cd949dfa9cac6a9660698be7d23e9c7faba08"
 }
