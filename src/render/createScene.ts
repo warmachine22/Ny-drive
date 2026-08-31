@@ -9,7 +9,10 @@ export interface RenderScene {
   dispose(): void;
 }
 
-const VIEW_HEIGHT = 34;
+// T009 used a 34 m vertical view, which made the 4.3 m car dominate the screen and
+// left too little NYC street context to anticipate turns. The wider 88 m baseline
+// preserves the miniature/isometric read while speed zoom can expose roughly 110 m.
+export const BASE_VIEW_HEIGHT_M = 88;
 
 function createPrototypeCar(): {
   group: THREE.Group;
@@ -87,7 +90,7 @@ export function createRenderScene(canvas: HTMLCanvasElement): RenderScene {
   const scene = new THREE.Scene();
   scene.background = new THREE.Color(0x0b1017);
 
-  const camera = new THREE.OrthographicCamera(-20, 20, 17, -17, 0.1, 500);
+  const camera = new THREE.OrthographicCamera(-44, 44, 44, -44, 0.1, 500);
   camera.position.set(24, 28, 24);
   camera.lookAt(0, 0, 0);
 
@@ -114,7 +117,7 @@ export function createRenderScene(canvas: HTMLCanvasElement): RenderScene {
   const resize = (width: number, height: number): void => {
     const safeHeight = Math.max(height, 1);
     const aspect = Math.max(width, 1) / safeHeight;
-    const halfHeight = VIEW_HEIGHT / 2;
+    const halfHeight = BASE_VIEW_HEIGHT_M / 2;
     camera.left = -halfHeight * aspect;
     camera.right = halfHeight * aspect;
     camera.top = halfHeight;
