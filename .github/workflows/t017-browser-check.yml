@@ -61,15 +61,17 @@ jobs:
           const initial = await status();
           await page.screenshot({ path: 'browser-artifacts/01-initial.png', fullPage: true });
 
-          // Build speed, then hold a strong right arc long enough to leave the
-          // authoritative road polygon and settle on the streamed support slab.
+          // Accelerate along the spawn road, rotate only partway toward a right turn,
+          // then release steering and keep driving diagonally. That deliberately cuts
+          // through block interior rather than following the perpendicular street.
           await page.keyboard.down('w');
-          await page.waitForTimeout(1700);
+          await page.waitForTimeout(1600);
           await page.keyboard.down('d');
-          await page.waitForTimeout(1900);
+          await page.waitForTimeout(520);
           await page.keyboard.up('d');
+          await page.waitForTimeout(2900);
           await page.keyboard.up('w');
-          await page.waitForTimeout(1000);
+          await page.waitForTimeout(900);
           const offroad = await status();
           await page.screenshot({ path: 'browser-artifacts/02-offroad-supported.png', fullPage: true });
 
