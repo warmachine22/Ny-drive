@@ -11,6 +11,8 @@ from .common import as_int, first, parse_dcm_width_m, scalar_properties
 
 SOURCE_KEY = "nyc-cscl-centerline"
 SOURCE_CRS = "EPSG:4326"
+BRIDGE_SEGMENT_TYPE = "3"
+TUNNEL_SEGMENT_TYPE = "4"
 
 
 def _directionality(value: Any) -> Directionality:
@@ -40,6 +42,8 @@ def normalize_cscl_feature(
     lanes_backward = travel_lanes if directionality is Directionality.REVERSE else None
     width_m = parse_dcm_width_m(first(properties, "street_width", "streetwidt"))
     road_class_value = first(properties, "rw_type", "RW_TYPE")
+    segment_type = first(properties, "segment_type", "segment_ty")
+    segment_type_code = str(segment_type).strip() if segment_type is not None else ""
 
     geometry = transform_geometry(shape(raw_geometry), source_crs)
     return RoadCenterline(
@@ -47,7 +51,7 @@ def normalize_cscl_feature(
         paths=line_paths(geometry),
         name=first(properties, "full_street_name", "full_stree", "street_name_label", "stname_lab"),
         borough=None,
-        feature_type=first(properties, "segment_type", "segment_ty"),
+        feature_type=segment_type,
         route_type=str(road_class_value) if road_class_value is not None else None,
         roadway_type=str(road_class_value) if road_class_value is not None else None,
         build_status=first(properties, "status", "STATUS"),
@@ -58,6 +62,8 @@ def normalize_cscl_feature(
             lanes_backward=lanes_backward,
             width_m=width_m,
             road_class=str(road_class_value) if road_class_value is not None else None,
+            bridge=segment_type_code == BRIDGE_SEGMENT_TYPE,
+            tunnel=segment_type_code == TUNNEL_SEGMENT_TYPE,
             tags=scalar_properties(properties),
         ),
         provenance=SourceProvenance(SOURCE_KEY, source_id, source_crs, source_revision),
