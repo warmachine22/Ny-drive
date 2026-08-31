@@ -77,7 +77,10 @@ export class WorldStreamer {
 
   async initialize(): Promise<WorldManifest> {
     const manifest = await this.source.loadManifest();
-    if (manifest.schema_version !== 1 || manifest.coordinate_system.units !== 'metres') {
+    if (
+      (manifest.schema_version !== 1 && manifest.schema_version !== 2) ||
+      manifest.coordinate_system.units !== 'metres'
+    ) {
       throw new Error('Unsupported world manifest coordinate contract.');
     }
     this.manifest = manifest;
@@ -99,12 +102,12 @@ export class WorldStreamer {
     return { x: (minX + maxX) / 2, y: (minY + maxY) / 2 };
   }
 
-  nearestLoadedRoadPose(point: WorldPoint): RoadPose | null {
+  nearestLoadedRoadPose(point: WorldPoint, elevationM?: number): RoadPose | null {
     const tiles: TilePayload[] = [];
     for (const record of this.records.values()) {
       if (record.data) tiles.push(record.data);
     }
-    return findNearestRoadPose(tiles, point);
+    return findNearestRoadPose(tiles, point, elevationM);
   }
 
   nearestLoadedRoadPoint(point: WorldPoint): WorldPoint | null {
