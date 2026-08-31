@@ -15,10 +15,10 @@
     "status": "passed",
     "level": "quick",
     "command": "python3 scripts/roach_check.py && npm run check && python3 -m pytest tools/map_compiler/tests",
-    "notes": "PR #10 reconciled head passed web runtime, project health, lint/types/schemas, Ubuntu Roach coordination, and Windows Roach coordination; merged as 92892af0.",
-    "verified_at": "2026-08-31T17:16:51Z",
-    "commit": "92892af0234b24b2999f46952f2d94321292864a"
+    "notes": "PR #11 final production-only head passed the declared T010 task check, full map-compiler tests, web runtime, project health, lint/types/schemas, Ubuntu Roach coordination, and Windows Roach coordination; temporary Chromium artifact 9779977412 also passed real-browser Roadbed/reset smoke verification. Merged as 534ed6e1.",
+    "verified_at": "2026-08-31T23:45:59Z",
+    "commit": "534ed6e15f320e24d9b8d9d0456c2131d978c44c"
   },
   "blocked": null,
-  "updated_at": "2026-08-31T17:16:51Z"
+  "updated_at": "2026-08-31T23:45:59Z"
 }

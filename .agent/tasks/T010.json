@@ -2,7 +2,7 @@
   "id": "T010",
   "kind": "implementation",
   "title": "Compile elevation and grade-separated road structures",
-  "status": "claimed",
+  "status": "done",
   "priority": "high",
   "depends_on": ["T003", "T004"],
   "areas": ["map-compiler", "grade-separation"],
@@ -17,19 +17,22 @@
     "diagnostics identify unresolved or contradictory vertical topology instead of silently flattening it"
   ],
   "verify": "python3 -m pytest tools/map_compiler/tests -k 'elevation or bridge or tunnel or grade'",
-  "verification": null,
-  "claim": {
-    "worker": "chatgpt-nydrive-0831b",
-    "claimed_at": "2026-08-31T23:11:00Z",
-    "lease_expires_at": "2026-09-01T01:11:00Z",
-    "branch": "roach/T010-chatgpt-nydrive-0831b",
-    "base_commit": "3daff9d27e35793ebd7cde1d13f040d27384281a"
-  },
+  "verification": "PR #11 final production-only head passed the declared T010 elevation/bridge/tunnel/grade pytest selection, the full map-compiler suite, hosted npm run check (TypeScript, unit tests, production build), project health, lint/types/schemas, and both Ubuntu and Windows Roach coordination/state validation. Temporary Chromium verification run 33451655491 and artifact 9779977412 loaded the real built game at Roadbed with stable 4/4 wheel contacts, exercised normal R recovery back to Roadbed with 4/4 contacts, and recorded no browser/page errors. The temporary browser workflow was removed before merge.",
+  "claim": null,
   "handoff": null,
   "review_of": null,
   "correction_of": null,
-  "integration": null,
-  "evidence": null,
-  "completed_at": null,
-  "commit": null
+  "integration": {
+    "branch": "roach/T010-chatgpt-nydrive-0831b",
+    "merge_commit": "534ed6e15f320e24d9b8d9d0456c2131d978c44c",
+    "level": "quick",
+    "verified_at": "2026-08-31T23:45:59Z"
+  },
+  "evidence": {
+    "work": "Pinned and ingested the 2017 NYC LiDAR bare-earth DEM; added metric schema-v2 elevation output, CSCL/OSM vertical topology resolution, continuous bridge/tunnel/ramp profiles, explicit topology diagnostics, elevated Roadbed rendering/collision, schema-v2 flat-support exclusion, elevation-aware spawn/reset/fall recovery, deterministic compiler/runtime tests, and source/uncertainty documentation. Merged through PR #11; browser artifact 9779977412 verified the real browser runtime and safe reset path.",
+    "work_waived": false,
+    "task_check": "passed"
+  },
+  "completed_at": "2026-08-31T23:45:59Z",
+  "commit": "534ed6e15f320e24d9b8d9d0456c2131d978c44c"
 }
