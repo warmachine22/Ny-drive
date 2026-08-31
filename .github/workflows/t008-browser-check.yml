@@ -58,25 +58,27 @@ jobs:
           await page.screenshot({ path: 'browser-artifacts/01-initial.png', fullPage: true });
 
           await page.keyboard.down('w');
-          await page.waitForTimeout(1700);
+          await page.waitForTimeout(2200);
           const approachStatus = await status();
           await page.screenshot({ path: 'browser-artifacts/02-approach.png', fullPage: true });
 
           await page.keyboard.down('d');
-          await page.waitForTimeout(180);
+          await page.waitForTimeout(150);
           await page.keyboard.down(' ');
-          await page.waitForTimeout(520);
+          await page.waitForTimeout(320);
           const handbrakeStatus = await status();
           await page.screenshot({ path: 'browser-artifacts/03-handbrake.png', fullPage: true });
 
           await page.keyboard.up(' ');
+          await page.waitForTimeout(100);
           await page.keyboard.up('d');
           await page.keyboard.down('a');
-          await page.waitForTimeout(850);
+          await page.waitForTimeout(420);
           const countersteerStatus = await status();
           await page.screenshot({ path: 'browser-artifacts/04-countersteer.png', fullPage: true });
+
           await page.keyboard.up('a');
-          await page.waitForTimeout(550);
+          await page.waitForTimeout(850);
           await page.keyboard.up('w');
           const recoveryStatus = await status();
           await page.screenshot({ path: 'browser-artifacts/05-recovery.png', fullPage: true });
