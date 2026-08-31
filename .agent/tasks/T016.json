@@ -1,0 +1,29 @@
+{
+  "id": "T016",
+  "kind": "implementation",
+  "title": "Correct wide miniature isometric camera presentation",
+  "status": "planned",
+  "priority": "urgent",
+  "depends_on": ["T009", "T015"],
+  "areas": ["player-experience", "camera"],
+  "requirements": ["FR-009", "FR-011"],
+  "requires": ["repo-write", "shell"],
+  "prefers": ["browser-interaction", "vision", "web-research"],
+  "acceptance": [
+    "the driving camera is visually tuned toward a Smashy Road-like elevated miniature/isometric presentation: substantially wider than the T009 34 m vertical view, with a more top-down readable angle and a fixed world orientation rather than a close chase-camera feel",
+    "at ordinary city driving speeds the viewport exposes multiple upcoming road choices/intersections far enough ahead to plan a turn instead of discovering it at the edge of the screen",
+    "camera yaw/pitch/framing are tuned against the real Manhattan fixture so the street grid reads as intentional isometric geometry rather than an awkward asymmetric projection; vehicle yaw/roll/pitch still do not rotate the world camera",
+    "speed-based look-ahead/zoom remain bounded and smooth, floating-origin rebases remain visually continuous, and the player car stays readable without occupying an excessive share of the viewport",
+    "a browser visual verification captures representative stationary, straight-driving, and turning frames and records owner-reference comparison notes before integration"
+  ],
+  "verify": "npm run check",
+  "verification": null,
+  "claim": null,
+  "handoff": null,
+  "review_of": null,
+  "correction_of": "T009",
+  "integration": null,
+  "evidence": null,
+  "completed_at": null,
+  "commit": null
+}
