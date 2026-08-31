@@ -100,17 +100,9 @@ export function createRenderScene(canvas: HTMLCanvasElement): RenderScene {
   sun.position.set(12, 24, 8);
   scene.add(sun);
 
-  const ground = new THREE.Mesh(
-    new THREE.PlaneGeometry(120, 120),
-    new THREE.MeshStandardMaterial({ color: 0x1f2933, roughness: 0.95 }),
-  );
-  ground.rotation.x = -Math.PI / 2;
-  scene.add(ground);
-
-  const grid = new THREE.GridHelper(120, 60, 0x6a7887, 0x34404c);
-  grid.position.y = 0.015;
-  scene.add(grid);
-
+  // Ground is intentionally not camera-local. T017 streams a support surface with
+  // each eligible world tile so visual/physics lifetime follows the world streamer
+  // instead of ending at the old fixed 120 m debug plane.
   const prototype = createPrototypeCar();
   const playerCar = prototype.group;
   scene.add(playerCar);
@@ -128,8 +120,6 @@ export function createRenderScene(canvas: HTMLCanvasElement): RenderScene {
   };
 
   const dispose = (): void => {
-    ground.geometry.dispose();
-    (ground.material as THREE.Material).dispose();
     for (const geometry of new Set(prototype.geometries)) geometry.dispose();
     for (const material of new Set(prototype.materials)) material.dispose();
     renderer.dispose();
