@@ -21,7 +21,7 @@
   "verify": "npm run check",
   "verification": "PR #9 passed hosted npm run check: strict TypeScript, 34/34 Vitest tests across 14 suites, and production Vite build. Merge-context web runtime, project health, lint/types/schemas, and Ubuntu Roach coordination passed. A temporary production Chromium maneuver on the real Flatiron fixture recorded normal-turn yaw about 47 deg/s with 3.7 deg rear slip, handbrake-turn yaw about 59 deg/s with 6.8 deg rear slip, and countersteer/throttle recovery near 3 deg/s yaw with 0.2 deg rear slip; no console/page errors. The temporary workflow was removed before merge. Exact subjective feel remains data-driven for owner desktop retesting.",
   "claim": null,
-  "handoff": "The post-owner-playtest tune is intentionally a strong first pass, not a claim of final subjective handling. Use telemetry plus the owner's next desktop retest for any fine adjustment; preserve T015 steering sign and physics-only drift behavior.",
+  "handoff": null,
   "review_of": null,
   "correction_of": null,
   "integration": {
@@ -31,7 +31,7 @@
     "verified_at": "2026-08-31T06:19:00Z"
   },
   "evidence": {
-    "work": "Speed-dependent steering, Ackermann front steering, axle-specific grip/cornering balance, rear-only speed-blended handbrake brake/grip/drive behavior, yaw/rear-slip telemetry, normal-turn and drift/recovery integration tests, and documented open-reference concepts merged through PR #9. Browser artifact 9747455000 recorded normal turn, handbrake initiation, and recovery on the real fixture.",
+    "work": "Speed-dependent steering, Ackermann front steering, axle-specific grip/cornering balance, rear-only speed-blended handbrake brake/grip/drive behavior, yaw/rear-slip telemetry, normal-turn and drift/recovery integration tests, and documented open-reference concepts merged through PR #9. Browser artifact 9747455000 recorded normal turn, handbrake initiation, and recovery on the real fixture. Subjective fine-tuning remains intentionally owner-retunable; preserve T015 steering sign and physics-only drift behavior in future corrections.",
     "work_waived": false,
     "task_check": "passed"
   },
