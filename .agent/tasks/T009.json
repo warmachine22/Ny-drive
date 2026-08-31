@@ -10,11 +10,12 @@
   "requires": ["repo-write", "shell"],
   "prefers": ["browser-interaction", "vision"],
   "acceptance": [
-    "desktop keyboard controls map through the action-input layer to steering, throttle, braking/reverse, handbrake, and reset without physics code reading DOM keys directly",
-    "a near-isometric follow camera uses stable pitch/yaw and smoothing with enough look-ahead to read upcoming streets at driving speed",
-    "camera behavior remains readable through normal drift yaw and does not snap unpredictably when the car rotates quickly",
-    "reset finds or uses a safe nearby road pose and restores an overturned, stuck, fallen, or undrivable car without requiring a page reload",
-    "the browser can launch directly into free driving with the required controls and no mission/progression dependency"
+    "desktop keyboard controls map through the action-input layer to steering, throttle, braking/reverse, handbrake, and reset without physics code reading DOM keys directly; reset is edge-triggered so holding R cannot repeatedly reset the car every render frame",
+    "a near-isometric follow camera consumes the dynamic vehicle pose, uses stable pitch/yaw plus smoothing and speed-sensitive look-ahead, and provides enough forward visibility to read upcoming streets at driving speed",
+    "camera behavior remains readable through normal rapid yaw/oversteer and does not snap, orbit unpredictably, or inherit chassis roll/pitch in a way that destroys the near-isometric presentation",
+    "reset resolves a safe nearby Roadbed pose with a credible road heading where centerline data is available, restores an overturned/stuck/fallen/undrivable car without a page reload, and re-establishes streamer/Rapier physics readiness before vehicle forces resume",
+    "floating-origin rebasing and asynchronous tile completion cannot attach a tile using a stale runtime origin; either rebasing is serialized against an in-flight stream update or the attachment path obtains the current origin at completion time",
+    "the browser launches directly into free driving with the required controls and no mission/progression dependency; automated tests cover reset edge behavior, camera smoothing/look-ahead invariants, safe-road pose selection, and the streaming/rebase synchronization rule"
   ],
   "verify": "npm run check",
   "verification": null,
