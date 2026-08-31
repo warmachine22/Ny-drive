@@ -1,7 +1,8 @@
-import type { TilePayload, WorldPoint } from './types';
+import { tilePointElevationM, type TilePayload, type WorldPoint } from './types';
 
 export interface RoadPose {
   position: WorldPoint;
+  elevationM: number;
   headingRad: number;
   source: 'centerline' | 'roadbed';
   roadName: string | null;
@@ -10,6 +11,7 @@ export interface RoadPose {
 
 interface SegmentCandidate {
   position: WorldPoint;
+  elevationM: number;
   headingRad: number;
   roadName: string | null;
   distanceM: number;
@@ -21,8 +23,8 @@ function distance(a: WorldPoint, b: WorldPoint): number {
 
 function segmentPose(
   query: WorldPoint,
-  a: WorldPoint,
-  b: WorldPoint,
+  a: { x: number; y: number; elevationM: number },
+  b: { x: number; y: number; elevationM: number },
   roadName: string | null,
   reverse: boolean,
 ): SegmentCandidate | null {
@@ -35,16 +37,18 @@ function segmentPose(
     Math.max(0, ((query.x - a.x) * dx + (query.y - a.y) * dy) / lengthSquared),
   );
   const position = { x: a.x + dx * t, y: a.y + dy * t };
+  const elevationM = a.elevationM + (b.elevationM - a.elevationM) * t;
   const headingDx = reverse ? -dx : dx;
   const headingDy = reverse ? -dy : dy;
   // Vehicle local forward is -Z. WorldPoint.y maps to Three/Rapier Z.
   const headingRad = Math.atan2(-headingDx, -headingDy);
-  return { position, headingRad, roadName, distanceM: distance(query, position) };
+  return { position, elevationM, headingRad, roadName, distanceM: distance(query, position) };
 }
 
 function roadbedFallback(tile: TilePayload, query: WorldPoint): RoadPose | null {
   let best: RoadPose | null = null;
   for (const surface of tile.road_surfaces) {
+    if (surface.vertical_status === 'unresolved') continue;
     for (const polygon of surface.polygons) {
       const ring = polygon.outer;
       if (ring.length < 3) continue;
@@ -56,11 +60,13 @@ function roadbedFallback(tile: TilePayload, query: WorldPoint): RoadPose | null 
       if (count < 3) continue;
       let x = 0;
       let y = 0;
+      let elevationM = 0;
       for (let index = 0; index < count; index += 1) {
         const point = ring[index];
         if (!point) continue;
         x += point[0];
         y += point[1];
+        elevationM += tilePointElevationM(point);
       }
       const position = {
         x: tile.origin_m[0] + x / count,
@@ -68,6 +74,7 @@ function roadbedFallback(tile: TilePayload, query: WorldPoint): RoadPose | null 
       };
       const candidate: RoadPose = {
         position,
+        elevationM: elevationM / count,
         headingRad: 0,
         source: 'roadbed',
         roadName: null,
@@ -91,8 +98,16 @@ export function findNearestRoadPose(tiles: readonly TilePayload[], query: WorldP
           if (!a || !b) continue;
           const candidate = segmentPose(
             query,
-            { x: tile.origin_m[0] + a[0], y: tile.origin_m[1] + a[1] },
-            { x: tile.origin_m[0] + b[0], y: tile.origin_m[1] + b[1] },
+            {
+              x: tile.origin_m[0] + a[0],
+              y: tile.origin_m[1] + a[1],
+              elevationM: tilePointElevationM(a),
+            },
+            {
+              x: tile.origin_m[0] + b[0],
+              y: tile.origin_m[1] + b[1],
+              elevationM: tilePointElevationM(b),
+            },
             road.name,
             road.directionality === 'reverse',
           );
