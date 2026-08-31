@@ -2,7 +2,7 @@
   "id": "T008",
   "kind": "implementation",
   "title": "Tune controllable drift and handbrake behavior",
-  "status": "planned",
+  "status": "claimed",
   "priority": "high",
   "depends_on": ["T007", "T009"],
   "areas": ["vehicle-physics"],
@@ -18,7 +18,13 @@
   ],
   "verify": "npm run check",
   "verification": null,
-  "claim": null,
+  "claim": {
+    "worker": "chatgpt-nydrive-a830",
+    "claimed_at": "2026-08-31T03:23:00Z",
+    "lease_expires_at": "2026-08-31T05:23:00Z",
+    "branch": "roach/T008-chatgpt-nydrive-a830",
+    "base_commit": "7dcb5210b709c0f9bd273b0f66d6849f11b09623"
+  },
   "handoff": null,
   "review_of": null,
   "correction_of": null,
