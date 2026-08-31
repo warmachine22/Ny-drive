@@ -2,7 +2,7 @@
   "id": "T007",
   "kind": "implementation",
   "title": "Implement vehicle rigid-body and AWD tire model",
-  "status": "claimed",
+  "status": "done",
   "priority": "high",
   "depends_on": ["T002", "T006"],
   "areas": ["vehicle-physics"],
@@ -17,19 +17,22 @@
     "the dynamic car can accelerate, steer, brake, remain numerically stable on the current Manhattan roadbed fixture, and cross active tile seams without falling through or encountering duplicate contact planes; slope/uneven-grade validation is deferred to T010 after elevation geometry exists"
   ],
   "verify": "npm run check",
-  "verification": null,
-  "claim": {
-    "worker": "chatgpt-nydrive-a830",
-    "claimed_at": "2026-08-31T02:51:00Z",
-    "lease_expires_at": "2026-08-31T04:51:00Z",
-    "branch": "roach/T007-chatgpt-nydrive-a830",
-    "base_commit": "432c101280f6b144a715b74d02062478c623fd8c"
-  },
+  "verification": "PR #6 head bf5ba98da4528c258574ffe625f2bb69638e1ab9 passed the required hosted npm run check in merge context: strict TypeScript, Vite production build, and 19/19 Vitest tests. The tests include real Rapier WASM suspension/acceleration and a dynamic vehicle crossing between adjacent Roadbed-derived tile colliders while maintaining road contact. Roach project health, lint/types/schemas, and Ubuntu coordination/state validation also passed before merge.",
+  "claim": null,
   "handoff": null,
   "review_of": null,
   "correction_of": null,
-  "integration": null,
-  "evidence": null,
-  "completed_at": null,
-  "commit": null
+  "integration": {
+    "branch": "roach/T007-chatgpt-nydrive-a830",
+    "merge_commit": "377cc2482c83607e63926721f0b1ff629fa94b16",
+    "level": "quick",
+    "verified_at": "2026-08-31T03:08:30Z"
+  },
+  "evidence": {
+    "work": "Dynamic Rapier chassis, four self-excluding suspension raycasts, spring/damper contact forces, progressive combined tire grip, data-driven AWD torque split, bounded 120 Hz fixed-step simulation, unbranded GC8-era procedural visual, telemetry, physics-ready tile gating, and Roadbed seam traversal merged through PR #6. docs/VEHICLE_MODEL.md records subsystem boundaries and prototype parameter status.",
+    "work_waived": false,
+    "task_check": "passed"
+  },
+  "completed_at": "2026-08-31T03:08:30Z",
+  "commit": "377cc2482c83607e63926721f0b1ff629fa94b16"
 }
