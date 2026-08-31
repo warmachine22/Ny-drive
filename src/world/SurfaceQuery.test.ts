@@ -47,9 +47,31 @@ describe('surfaceKindAtTile', () => {
     expect(surfaceKindAtTile(fixture, { x: 120, y: 60 })).toBe('none');
   });
 
-  it('does not report support for a vertically structured tile', () => {
+  it('does not report support for a vertically structured schema-v1 tile', () => {
     const fixture = tile();
     fixture.roads[0]!.bridge = true;
     expect(surfaceKindAtTile(fixture, { x: 60, y: 60 })).toBe('none');
+  });
+
+  it('never creates the temporary flat support slab under schema-v2 elevation tiles', () => {
+    const fixture = tile();
+    fixture.schema_version = 2;
+    fixture.road_surfaces[0]!.vertical_status = 'resolved';
+    fixture.road_surfaces[0]!.polygons[0]!.outer = [
+      [10, 10, 4],
+      [30, 10, 4],
+      [30, 30, 4],
+      [10, 30, 4],
+      [10, 10, 4],
+    ];
+    expect(surfaceKindAtTile(fixture, { x: 20, y: 20 })).toBe('roadbed');
+    expect(surfaceKindAtTile(fixture, { x: 60, y: 60 })).toBe('none');
+  });
+
+  it('does not expose unresolved Roadbed as a drivable surface', () => {
+    const fixture = tile();
+    fixture.schema_version = 2;
+    fixture.road_surfaces[0]!.vertical_status = 'unresolved';
+    expect(surfaceKindAtTile(fixture, { x: 20, y: 20 })).toBe('none');
   });
 });
