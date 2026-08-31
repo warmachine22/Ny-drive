@@ -46,7 +46,7 @@ function tile(): TilePayload {
 }
 
 describe('ThreeTileRuntimeAdapter', () => {
-  it('keeps road metadata on render objects and bounds Rapier colliders to physics activation', async () => {
+  it('streams support below Roadbed and bounds both collider types to physics activation', async () => {
     const scene = new THREE.Scene();
     const physics = await createPhysicsRuntime();
     const adapter = new ThreeTileRuntimeAdapter(scene, physics);
@@ -55,14 +55,17 @@ describe('ThreeTileRuntimeAdapter', () => {
     adapter.attachTile(fixture, { x: 1024, y: 3328 });
     const group = scene.getObjectByName('world-tile:4:13');
     expect(group).toBeDefined();
+    const support = group?.getObjectByName('support-ground:4:13');
+    expect(support?.userData.supportGround).toBe(true);
+    expect(support?.position.y).toBeLessThan(-0.2);
     const centerline = group?.children.find((child) => child.userData.road?.name === 'BROADWAY');
     expect(centerline?.userData.road).toMatchObject({ lanes: 4, widthM: 18, roadClass: '1' });
     expect(physics.world.colliders.len()).toBe(0);
 
-    expect(adapter.setPhysicsActive(fixture.tile_id, true)).toBe(1);
-    expect(physics.world.colliders.len()).toBe(1);
-    expect(adapter.setPhysicsActive(fixture.tile_id, true)).toBe(1);
-    expect(physics.world.colliders.len()).toBe(1);
+    expect(adapter.setPhysicsActive(fixture.tile_id, true)).toBe(2);
+    expect(physics.world.colliders.len()).toBe(2);
+    expect(adapter.setPhysicsActive(fixture.tile_id, true)).toBe(2);
+    expect(physics.world.colliders.len()).toBe(2);
 
     adapter.setPhysicsActive(fixture.tile_id, false);
     expect(physics.world.colliders.len()).toBe(0);
