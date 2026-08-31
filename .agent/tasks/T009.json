@@ -2,7 +2,7 @@
   "id": "T009",
   "kind": "implementation",
   "title": "Add player controls, isometric camera, and reset",
-  "status": "planned",
+  "status": "claimed",
   "priority": "high",
   "depends_on": ["T007"],
   "areas": ["player-experience"],
@@ -19,7 +19,13 @@
   ],
   "verify": "npm run check",
   "verification": null,
-  "claim": null,
+  "claim": {
+    "worker": "chatgpt-nydrive-a830",
+    "claimed_at": "2026-08-31T03:10:00Z",
+    "lease_expires_at": "2026-08-31T05:10:00Z",
+    "branch": "roach/T009-chatgpt-nydrive-a830",
+    "base_commit": "efc4213384c60708fcdca953b5928d179cded878"
+  },
   "handoff": null,
   "review_of": null,
   "correction_of": null,
