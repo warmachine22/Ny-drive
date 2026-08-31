@@ -2,7 +2,7 @@
   "id": "T015",
   "kind": "implementation",
   "title": "Correct reversed steering controls",
-  "status": "planned",
+  "status": "claimed",
   "priority": "high",
   "depends_on": [
     "T009"
@@ -29,7 +29,13 @@
   ],
   "verify": null,
   "verification": null,
-  "claim": null,
+  "claim": {
+    "worker": "codex-steering-20260831",
+    "claimed_at": "2026-08-31T05:37:22Z",
+    "lease_expires_at": "2026-08-31T07:37:22Z",
+    "branch": "roach/T015-codex-steering-20260831",
+    "base_commit": "92b8656455c401a79472c94769e63550ba08657d"
+  },
   "handoff": null,
   "review_of": null,
   "correction_of": "T009",
