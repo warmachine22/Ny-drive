@@ -49,13 +49,14 @@ function tile(): TilePayload {
 }
 
 describe('findNearestRoadPose', () => {
-  it('projects onto centerline geometry and returns a credible heading', () => {
+  it('projects onto centerline geometry and returns heading and elevation', () => {
     const pose = findNearestRoadPose([tile()], { x: 1074, y: 3360 });
     expect(pose).not.toBeNull();
     expect(pose?.source).toBe('centerline');
     expect(pose?.roadName).toBe('TEST AVE');
     expect(pose?.position.x).toBeCloseTo(1074);
     expect(pose?.position.y).toBeCloseTo(3343);
+    expect(pose?.elevationM).toBe(0);
     expect(pose?.headingRad).toBeCloseTo(-Math.PI / 2);
     expect(pose?.distanceM).toBeCloseTo(17);
   });
@@ -67,5 +68,30 @@ describe('findNearestRoadPose', () => {
     expect(pose?.source).toBe('roadbed');
     expect(pose?.position.x).toBeCloseTo(1074);
     expect(pose?.position.y).toBeCloseTo(3343);
+    expect(pose?.elevationM).toBe(0);
+  });
+
+  it('uses elevation to disambiguate stacked roads at the same horizontal crossing', () => {
+    const elevated = tile();
+    elevated.schema_version = 2;
+    elevated.roads = [
+      {
+        ...elevated.roads[0]!,
+        stable_id: 'centerline:upper',
+        source_id: 'upper',
+        name: 'UPPER',
+        paths: [[[0, 15, 12], [100, 15, 12]]],
+      },
+      {
+        ...elevated.roads[0]!,
+        stable_id: 'centerline:lower',
+        source_id: 'lower',
+        name: 'LOWER',
+        paths: [[[50, -35, 2], [50, 65, 2]]],
+      },
+    ];
+    const query = { x: 1074, y: 3343 };
+    expect(findNearestRoadPose([elevated], query, 11.5)?.roadName).toBe('UPPER');
+    expect(findNearestRoadPose([elevated], query, 2.5)?.roadName).toBe('LOWER');
   });
 });
