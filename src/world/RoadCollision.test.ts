@@ -1,7 +1,11 @@
 import RAPIER from '@dimforge/rapier3d-compat';
 import { describe, expect, it } from 'vitest';
 import { createPhysicsRuntime } from '../physics/PhysicsWorld';
-import { RoadCollisionManager, buildRoadCollisionMesh } from './RoadCollision';
+import {
+  RoadCollisionManager,
+  buildRoadCollisionMesh,
+  buildRoadSurfaceCollisionMesh,
+} from './RoadCollision';
 import type { TilePayload } from './types';
 
 function squareTile(id = '0:0', origin: [number, number] = [0, 0]): TilePayload {
@@ -55,6 +59,32 @@ describe('road collision geometry', () => {
     const mesh = buildRoadCollisionMesh(tile);
     expect(mesh.triangleCount).toBe(2);
     expect(mesh.vertices.length).toBe(18);
+  });
+
+  it('uses compiled per-vertex elevation for schema-v2 Roadbed collision', () => {
+    const tile = squareTile();
+    tile.schema_version = 2;
+    tile.road_surfaces[0]!.vertical_status = 'resolved';
+    tile.road_surfaces[0]!.polygons[0]!.outer = [
+      [0, 0, 3],
+      [20, 0, 3],
+      [20, 20, 5],
+      [0, 20, 5],
+      [0, 0, 3],
+    ];
+    const mesh = buildRoadCollisionMesh(tile);
+    const elevations = [];
+    for (let index = 1; index < mesh.vertices.length; index += 3) {
+      elevations.push(mesh.vertices[index]);
+    }
+    expect(Math.min(...elevations)).toBe(3);
+    expect(Math.max(...elevations)).toBe(5);
+  });
+
+  it('omits unresolved vertical Roadbed rather than creating a false crossing', () => {
+    const surface = squareTile().road_surfaces[0]!;
+    surface.vertical_status = 'unresolved';
+    expect(buildRoadSurfaceCollisionMesh(surface).triangleCount).toBe(0);
   });
 
   it('creates one static trimesh per active tile, supports ray contact, rebases, and removes it cleanly', async () => {
