@@ -1,3 +1,4 @@
+import { findNearestRoadPose, type RoadPose } from './RoadPose';
 import type { WorldSource } from './WorldSource';
 import type {
   RuntimeOrigin,
@@ -60,6 +61,7 @@ export class WorldStreamer {
   private manifest: WorldManifest | undefined;
   private readonly entries = new Map<string, TileManifestEntry>();
   private readonly records = new Map<string, TileRecord>();
+  private runtimeOrigin: RuntimeOrigin = { x: 0, y: 0 };
   private unloadedTotal = 0;
 
   constructor(
@@ -96,47 +98,25 @@ export class WorldStreamer {
     return { x: (minX + maxX) / 2, y: (minY + maxY) / 2 };
   }
 
-  nearestLoadedRoadPoint(point: WorldPoint): WorldPoint | null {
-    let nearest: WorldPoint | null = null;
-    let nearestDistance = Number.POSITIVE_INFINITY;
-
+  nearestLoadedRoadPose(point: WorldPoint): RoadPose | null {
+    const tiles: TilePayload[] = [];
     for (const record of this.records.values()) {
-      const tile = record.data;
-      if (!tile) continue;
-      for (const surface of tile.road_surfaces) {
-        for (const polygon of surface.polygons) {
-          const ring = polygon.outer;
-          if (ring.length < 3) continue;
-          const end = ring.length > 1 && ring[0]?.[0] === ring[ring.length - 1]?.[0] && ring[0]?.[1] === ring[ring.length - 1]?.[1]
-            ? ring.length - 1
-            : ring.length;
-          if (end < 3) continue;
-          let localX = 0;
-          let localY = 0;
-          for (let index = 0; index < end; index += 1) {
-            const vertex = ring[index];
-            if (!vertex) continue;
-            localX += vertex[0];
-            localY += vertex[1];
-          }
-          const candidate = {
-            x: tile.origin_m[0] + localX / end,
-            y: tile.origin_m[1] + localY / end,
-          };
-          const distance = Math.hypot(candidate.x - point.x, candidate.y - point.y);
-          if (distance < nearestDistance) {
-            nearest = candidate;
-            nearestDistance = distance;
-          }
-        }
-      }
+      if (record.data) tiles.push(record.data);
     }
+    return findNearestRoadPose(tiles, point);
+  }
 
-    return nearest;
+  nearestLoadedRoadPoint(point: WorldPoint): WorldPoint | null {
+    return this.nearestLoadedRoadPose(point)?.position ?? null;
   }
 
   async update(playerGlobal: WorldPoint, runtimeOrigin: RuntimeOrigin): Promise<void> {
     const manifest = this.requireManifest();
+    // Keep the current origin as mutable streamer state rather than capturing the
+    // update argument across asynchronous tile loads. A rebase that occurs while a
+    // load is pending updates this value, so completion attaches against the new origin.
+    this.runtimeOrigin = { ...runtimeOrigin };
+
     const physics = selectTiles(manifest, playerGlobal, this.config.physicsRadiusM);
     const render = selectTiles(manifest, playerGlobal, this.config.renderRadiusM);
     const cache = selectTiles(manifest, playerGlobal, this.config.cacheRadiusM);
@@ -151,7 +131,7 @@ export class WorldStreamer {
         continue;
       }
       if (record.state === 'cached') {
-        await this.adapter.attachTile(record.data, runtimeOrigin);
+        await this.adapter.attachTile(record.data, this.runtimeOrigin);
         record.state = 'ready';
       }
       if (physics.has(id) && record.state === 'ready') {
@@ -182,6 +162,10 @@ export class WorldStreamer {
 
   rebase(shift: WorldPoint): void {
     if (shift.x === 0 && shift.y === 0) return;
+    this.runtimeOrigin = {
+      x: this.runtimeOrigin.x + shift.x,
+      y: this.runtimeOrigin.y + shift.y,
+    };
     this.adapter.rebase(shift);
   }
 
