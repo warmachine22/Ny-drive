@@ -1,7 +1,15 @@
 import RAPIER from '@dimforge/rapier3d-compat';
 import * as THREE from 'three';
 import type { PhysicsRuntime } from '../physics/PhysicsWorld';
-import type { RuntimeOrigin, TilePayload, TilePolygon, WorldPoint } from './types';
+import {
+  tilePointElevationM,
+  type RuntimeOrigin,
+  type TilePayload,
+  type TilePoint,
+  type TilePolygon,
+  type TileRoadSurface,
+  type WorldPoint,
+} from './types';
 
 type RapierWorld = PhysicsRuntime['world'];
 type RapierCollider = ReturnType<RapierWorld['createCollider']>;
@@ -17,30 +25,43 @@ interface ActiveTileCollider {
   triangleCount: number;
 }
 
-function ringVectors(ring: [number, number][]): THREE.Vector2[] {
-  const points = ring.map(([x, y]) => new THREE.Vector2(x, y));
-  if (points.length > 1 && points[0]?.equals(points[points.length - 1] as THREE.Vector2)) {
+interface SurfaceVertex {
+  point: THREE.Vector2;
+  elevationM: number;
+}
+
+function ringVertices(ring: TilePoint[]): SurfaceVertex[] {
+  const points = ring.map((point) => ({
+    point: new THREE.Vector2(point[0], point[1]),
+    elevationM: tilePointElevationM(point),
+  }));
+  const first = points[0];
+  const last = points[points.length - 1];
+  if (points.length > 1 && first && last && first.point.equals(last.point)) {
     points.pop();
   }
   return points;
 }
 
-function upwardTriangle(points: [THREE.Vector2, THREE.Vector2, THREE.Vector2]): THREE.Vector2[] {
+function upwardTriangle(points: [SurfaceVertex, SurfaceVertex, SurfaceVertex]): SurfaceVertex[] {
   const [first, second, third] = points;
   const cross2d =
-    (second.x - first.x) * (third.y - first.y) -
-    (second.y - first.y) * (third.x - first.x);
-  // Mapping 2D (x,y) -> 3D (x,0,z) flips the sign of the Y normal.
+    (second.point.x - first.point.x) * (third.point.y - first.point.y) -
+    (second.point.y - first.point.y) * (third.point.x - first.point.x);
+  // Mapping 2D (x,y) -> 3D (x,elevation,z) flips the sign of the Y normal.
   // Clockwise 2D winding therefore produces a road-facing +Y normal.
   return cross2d > 0 ? [first, third, second] : [first, second, third];
 }
 
-function triangulatePolygon(polygon: TilePolygon): THREE.Vector2[][] {
-  const contour = ringVectors(polygon.outer);
+function triangulatePolygon(polygon: TilePolygon): SurfaceVertex[][] {
+  const contour = ringVertices(polygon.outer);
   if (contour.length < 3) return [];
-  const holes = polygon.holes.map(ringVectors).filter((ring) => ring.length >= 3);
+  const holes = polygon.holes.map(ringVertices).filter((ring) => ring.length >= 3);
   const points = [...contour, ...holes.flat()];
-  const faces = THREE.ShapeUtils.triangulateShape(contour, holes);
+  const faces = THREE.ShapeUtils.triangulateShape(
+    contour.map((vertex) => vertex.point),
+    holes.map((ring) => ring.map((vertex) => vertex.point)),
+  );
   return faces.map((face) => {
     const a = face[0];
     const b = face[1];
@@ -58,21 +79,44 @@ function triangulatePolygon(polygon: TilePolygon): THREE.Vector2[][] {
   });
 }
 
+export function buildRoadSurfaceCollisionMesh(surface: TileRoadSurface): RoadCollisionMesh {
+  if (surface.vertical_status === 'unresolved') {
+    return {
+      vertices: new Float32Array(),
+      indices: new Uint32Array(),
+      triangleCount: 0,
+    };
+  }
+
+  const vertices: number[] = [];
+  const indices: number[] = [];
+  let vertexIndex = 0;
+  for (const polygon of surface.polygons) {
+    for (const triangle of triangulatePolygon(polygon)) {
+      for (const vertex of triangle) {
+        vertices.push(vertex.point.x, vertex.elevationM, vertex.point.y);
+        indices.push(vertexIndex);
+        vertexIndex += 1;
+      }
+    }
+  }
+  return {
+    vertices: new Float32Array(vertices),
+    indices: new Uint32Array(indices),
+    triangleCount: indices.length / 3,
+  };
+}
+
 export function buildRoadCollisionMesh(tile: TilePayload): RoadCollisionMesh {
   const vertices: number[] = [];
   const indices: number[] = [];
   let vertexIndex = 0;
 
   for (const surface of tile.road_surfaces) {
-    for (const polygon of surface.polygons) {
-      for (const triangle of triangulatePolygon(polygon)) {
-        for (const point of triangle) {
-          vertices.push(point.x, 0, point.y);
-          indices.push(vertexIndex);
-          vertexIndex += 1;
-        }
-      }
-    }
+    const mesh = buildRoadSurfaceCollisionMesh(surface);
+    for (const value of mesh.vertices) vertices.push(value);
+    for (const index of mesh.indices) indices.push(index + vertexIndex);
+    vertexIndex += mesh.vertices.length / 3;
   }
 
   return {
