@@ -103,6 +103,52 @@ def test_bridge_and_tunnel_crossing_compile_at_distinct_heights():
     assert road_heights["bridge"] - road_heights["tunnel"] == 10.0
 
 
+def test_at_grade_bridge_endpoints_still_compile_a_separated_midspan_deck():
+    bridge = _road(
+        "bridge-at-grade-ends",
+        [(10, 100), (110, 100)],
+        feature_type="3",
+        from_level=13,
+        to_level=13,
+    )
+    street = _road(
+        "cross-street",
+        [(60, 50), (60, 150)],
+        from_level=13,
+        to_level=13,
+    )
+    bridge_surface = _surface(
+        "bridge-at-grade-surface",
+        [(10, 96), (110, 96), (110, 104), (10, 104), (10, 96)],
+    )
+    resolver = VerticalResolver(
+        [bridge_surface],
+        [bridge, street],
+        ConstantElevationSampler(10.0),
+    )
+    tile = next(
+        iter(compile_tiles([bridge_surface], [bridge, street], vertical=resolver).values())
+    )
+    bridge_item = next(item for item in tile["roads"] if item["source_id"] == bridge.source_id)
+    street_item = next(item for item in tile["roads"] if item["source_id"] == street.source_id)
+    bridge_heights = [point[2] for path in bridge_item["paths"] for point in path]
+    street_heights = [point[2] for path in street_item["paths"] for point in path]
+    surface_heights = [
+        point[2]
+        for polygon in tile["road_surfaces"][0]["polygons"]
+        for point in polygon["outer"]
+    ]
+    assert bridge_heights[0] == 10.0
+    assert bridge_heights[-1] == 10.0
+    assert max(bridge_heights) > 14.0
+    assert max(street_heights) == 10.0
+    assert max(surface_heights) > 14.0
+    assert any(
+        item["code"] == "inferred-structure-clearance"
+        for item in tile["vertical_diagnostics"]
+    )
+
+
 def test_grade_ramp_interpolates_between_at_grade_and_upper_level():
     ramp = _road(
         "ramp",
