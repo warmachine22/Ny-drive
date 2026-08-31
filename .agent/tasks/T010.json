@@ -2,7 +2,7 @@
   "id": "T010",
   "kind": "implementation",
   "title": "Compile elevation and grade-separated road structures",
-  "status": "planned",
+  "status": "claimed",
   "priority": "high",
   "depends_on": ["T003", "T004"],
   "areas": ["map-compiler", "grade-separation"],
@@ -18,7 +18,13 @@
   ],
   "verify": "python3 -m pytest tools/map_compiler/tests -k 'elevation or bridge or tunnel or grade'",
   "verification": null,
-  "claim": null,
+  "claim": {
+    "worker": "chatgpt-nydrive-0831b",
+    "claimed_at": "2026-08-31T23:11:00Z",
+    "lease_expires_at": "2026-09-01T01:11:00Z",
+    "branch": "roach/T010-chatgpt-nydrive-0831b",
+    "base_commit": "3daff9d27e35793ebd7cde1d13f040d27384281a"
+  },
   "handoff": null,
   "review_of": null,
   "correction_of": null,
