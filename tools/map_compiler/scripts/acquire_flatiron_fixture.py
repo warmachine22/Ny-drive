@@ -17,6 +17,7 @@ from shapely.geometry import box, mapping, shape
 BOUNDS = (-73.9967, 40.7388, -73.9882, 40.7481)
 ROADBED_RESOURCE = "https://data.cityofnewyork.us/resource/i36f-5ih7.geojson"
 CENTERLINE_RESOURCE = "https://data.cityofnewyork.us/resource/inkn-q76z.geojson"
+BUILDING_RESOURCE = "https://data.cityofnewyork.us/resource/5zhs-2jue.geojson"
 
 
 def bounded_url(base_url: str) -> str:
@@ -84,6 +85,7 @@ def subset_feature_collection(
 def build_snapshot() -> dict[str, Any]:
     roadbed_url = bounded_url(ROADBED_RESOURCE)
     centerline_url = bounded_url(CENTERLINE_RESOURCE)
+    building_url = bounded_url(BUILDING_RESOURCE)
     roadbed = subset_feature_collection(
         download_json(roadbed_url),
         keep_properties=("source_id", "feat_code", "sub_code", "status"),
@@ -92,19 +94,25 @@ def build_snapshot() -> dict[str, Any]:
         download_json(centerline_url),
         keep_properties=(
             "physicalid",
+            "bphys_id",
+            "boroughcode",
+            "borough_code",
             "status",
             "trafdir",
             "rw_type",
+            "streetwidth",
             "street_width",
             "from_level_code",
             "to_level_code",
             "number_travel_lanes",
             "number_park_lanes",
+            "number_total_lanes",
             "number_total_lane",
             "full_street_name",
             "street_name",
             "street_name_label",
             "segment_type",
+            "objectid",
             # Legacy/truncated aliases retained so archived snapshots remain readable.
             "streetwidt",
             "from_level",
@@ -115,6 +123,22 @@ def build_snapshot() -> dict[str, Any]:
             "full_stree",
             "stname_lab",
             "segment_ty",
+        ),
+    )
+    buildings = subset_feature_collection(
+        download_json(building_url),
+        keep_properties=(
+            "doitt_id",
+            "bin",
+            "name",
+            "construction_year",
+            "feature_code",
+            "geom_source",
+            "ground_elevation",
+            "height_roof",
+            "last_edited_date",
+            "last_status_type",
+            "objectid",
         ),
     )
     return {
@@ -132,9 +156,15 @@ def build_snapshot() -> dict[str, Any]:
                 "data_revision": "2026-08-16",
                 "query_url": centerline_url,
             },
+            "buildings": {
+                "dataset_id": "5zhs-2jue",
+                "data_revision": "2026-08-23",
+                "query_url": building_url,
+            },
         },
         "roadbed": roadbed,
         "centerline": centerline,
+        "buildings": buildings,
     }
 
 
@@ -147,19 +177,21 @@ def main() -> int:
     raw = json.dumps(snapshot, sort_keys=True, separators=(",", ":")).encode("utf-8")
     roadbed_count = len(snapshot["roadbed"]["features"])
     centerline_count = len(snapshot["centerline"]["features"])
+    building_count = len(snapshot["buildings"]["features"])
 
     if args.output:
         args.output.parent.mkdir(parents=True, exist_ok=True)
         args.output.write_bytes(raw + b"\n")
         print(
-            f"wrote {args.output} roadbed={roadbed_count} centerline={centerline_count} json_bytes={len(raw)}"
+            f"wrote {args.output} roadbed={roadbed_count} centerline={centerline_count} "
+            f"buildings={building_count} json_bytes={len(raw)}"
         )
         return 0
 
     compressed = gzip.compress(raw, mtime=0)
     encoded = base64.b64encode(compressed).decode("ascii")
     print(
-        f"fixture roadbed={roadbed_count} centerline={centerline_count} "
+        f"fixture roadbed={roadbed_count} centerline={centerline_count} buildings={building_count} "
         f"json_bytes={len(raw)} gzip_bytes={len(compressed)}",
         file=sys.stderr,
     )
