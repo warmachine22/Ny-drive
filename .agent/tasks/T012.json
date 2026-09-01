@@ -2,7 +2,7 @@
   "id": "T012",
   "kind": "implementation",
   "title": "Expand compiled road world to all five boroughs",
-  "status": "claimed",
+  "status": "done",
   "priority": "high",
   "depends_on": ["T006", "T010"],
   "areas": ["citywide-data"],
@@ -17,19 +17,22 @@
     "compiler diagnostics surface disconnected components, invalid topology, missing tiles, and unresolved grade-separation cases for correction rather than hiding them"
   ],
   "verify": "python3 -m pytest tools/map_compiler/tests",
-  "verification": null,
-  "claim": {
-    "worker": "chatgpt-nydrive-0831c",
-    "claimed_at": "2026-09-01T01:52:00Z",
-    "lease_expires_at": "2026-09-01T03:52:00Z",
-    "branch": "roach/T012-chatgpt-nydrive-0831c",
-    "base_commit": "fb44f47939dcf52700edcdbb492f6c333cd4d54b"
-  },
+  "verification": "PR #12 production-only head 91b5e502 passed the full map-compiler suite, web runtime check, project health, lint/types/schemas, and Roach coordination on Ubuntu and Windows. A temporary live NYC source smoke also verified current ordered Socrata pagination/schema and counted 104,961 Roadbed features plus 122,263 CSCL centerlines; that network-dependent workflow was removed before integration.",
+  "claim": null,
   "handoff": null,
   "review_of": null,
   "correction_of": null,
-  "integration": null,
-  "evidence": null,
-  "completed_at": null,
-  "commit": null
+  "integration": {
+    "branch": "roach/T012-chatgpt-nydrive-0831c",
+    "merge_commit": "de078d29a5fa8adad62e954cbf98eca6e5131df0",
+    "level": "quick",
+    "verified_at": "2026-09-01T02:17:20Z"
+  },
+  "evidence": {
+    "work": "Added deterministic paginated five-borough Roadbed/CSCL acquisition, borough-safe CSCL identity, schema-v2 citywide compilation over the existing T010 elevation path, vertical-level-aware road graph construction, cross-borough/cross-tile/component/structure/vertical diagnostics, representative cross-borough route audits, missing-output checks, per-tile SHA-256/byte metadata, source/provenance documentation, and regression tests. Live current-source verification caught and corrected the NYC API field names boroughcode/streetwidth before merge.",
+    "work_waived": false,
+    "task_check": "passed"
+  },
+  "completed_at": "2026-09-01T02:17:20Z",
+  "commit": "de078d29a5fa8adad62e954cbf98eca6e5131df0"
 }

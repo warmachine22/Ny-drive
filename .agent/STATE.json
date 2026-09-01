@@ -15,10 +15,10 @@
     "status": "passed",
     "level": "quick",
     "command": "python3 scripts/roach_check.py && npm run check && python3 -m pytest tools/map_compiler/tests",
-    "notes": "PR #11 final production-only head passed the declared T010 task check, full map-compiler tests, web runtime, project health, lint/types/schemas, Ubuntu Roach coordination, and Windows Roach coordination; temporary Chromium artifact 9779977412 also passed real-browser Roadbed/reset smoke verification. Merged as 534ed6e1.",
-    "verified_at": "2026-08-31T23:45:59Z",
-    "commit": "534ed6e15f320e24d9b8d9d0456c2131d978c44c"
+    "notes": "PR #12 final production-only head passed full map-compiler tests, web runtime, project health, lint/types/schemas, and Ubuntu/Windows Roach coordination. Temporary live NYC source smoke also passed current Roadbed/CSCL schema and ordered pagination checks with 104,961 Roadbed and 122,263 CSCL rows; the temporary workflow was removed before merge. Merged as de078d29.",
+    "verified_at": "2026-09-01T02:17:20Z",
+    "commit": "de078d29a5fa8adad62e954cbf98eca6e5131df0"
   },
   "blocked": null,
-  "updated_at": "2026-08-31T23:45:59Z"
+  "updated_at": "2026-09-01T02:17:20Z"
 }
