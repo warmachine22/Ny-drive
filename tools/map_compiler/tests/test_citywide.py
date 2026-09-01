@@ -107,7 +107,7 @@ def test_citywide_compile_covers_all_boroughs_and_long_route():
 
     assert manifest["schema_version"] == 2
     assert manifest["scope"] == "nyc-five-boroughs"
-    assert manifest["input_counts"] == {"roadbed": 5, "centerline": 5}
+    assert manifest["input_counts"] == {"roadbed": 5, "centerline": 5, "buildings": 0}
     assert manifest["tile_count"] >= 5
     assert len(tiles) == manifest["tile_count"]
 
