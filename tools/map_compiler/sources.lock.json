@@ -23,8 +23,9 @@
       "socrata_geojson": "https://data.cityofnewyork.us/resource/inkn-q76z.geojson",
       "data_last_updated": "2026-08-16",
       "api_crs": "EPSG:4326",
-      "citywide_identity": "BPHYS_ID; fallback borough_code:PHYSICALID",
+      "citywide_identity": "BPHYS_ID; fallback boroughcode:PHYSICALID",
       "citywide_order": "bphys_id ASC, objectid ASC",
+      "citywide_filter": "boroughcode in 1-5",
       "terms": "NYC Open Data / DCP informational-use limitations and disclaimers"
     },
     {
