@@ -1,5 +1,5 @@
 {
-  "version": 2,
+  "version": 3,
   "project_crs": "EPSG:32118",
   "project_origin_wgs84": [-74.006, 40.7128],
   "sources": [
@@ -12,7 +12,20 @@
       "metadata_last_updated": "2025-12-10",
       "data_last_updated": "2024-04-24",
       "api_crs": "EPSG:4326",
+      "citywide_order": "source_id ASC",
       "terms": "NYC Open Data Terms of Use; no usage restrictions, subject to dataset/provider terms"
+    },
+    {
+      "key": "nyc-cscl-centerline",
+      "provider": "NYC Department of City Planning / NYC Open Data",
+      "dataset_id": "inkn-q76z",
+      "landing_page": "https://data.cityofnewyork.us/City-Government/NYC-Street-Centerline-CSCL-/inkn-q76z",
+      "socrata_geojson": "https://data.cityofnewyork.us/resource/inkn-q76z.geojson",
+      "data_last_updated": "2026-08-16",
+      "api_crs": "EPSG:4326",
+      "citywide_identity": "BPHYS_ID; fallback borough_code:PHYSICALID",
+      "citywide_order": "bphys_id ASC, objectid ASC",
+      "terms": "NYC Open Data / DCP informational-use limitations and disclaimers"
     },
     {
       "key": "nyc-dcm-street-centerline",

@@ -13,6 +13,13 @@ SOURCE_KEY = "nyc-cscl-centerline"
 SOURCE_CRS = "EPSG:4326"
 BRIDGE_SEGMENT_TYPE = "3"
 TUNNEL_SEGMENT_TYPE = "4"
+BOROUGH_NAMES = {
+    1: "Manhattan",
+    2: "Bronx",
+    3: "Brooklyn",
+    4: "Queens",
+    5: "Staten Island",
+}
 
 
 def _directionality(value: Any) -> Directionality:
@@ -22,6 +29,32 @@ def _directionality(value: Any) -> Directionality:
     if code == "TF":
         return Directionality.REVERSE
     return Directionality.BOTH
+
+
+def _borough_code(properties: Mapping[str, Any]) -> int | None:
+    return as_int(
+        first(
+            properties,
+            "borough_code",
+            "boroughcod",
+            "borocode",
+            "borough_indicator",
+            "boroughind",
+        )
+    )
+
+
+def _citywide_source_id(properties: Mapping[str, Any], feature_id: Any) -> str:
+    bphys_id = first(properties, "bphys_id", "bphysid")
+    if bphys_id not in (None, ""):
+        return str(bphys_id).strip()
+    physical_id = str(
+        first(properties, "physicalid", "PHYSICALID", default=feature_id or "unknown")
+    ).strip()
+    borough_code = _borough_code(properties)
+    if borough_code is not None:
+        return f"{borough_code}:{physical_id}"
+    return physical_id
 
 
 def normalize_cscl_feature(
@@ -35,7 +68,8 @@ def normalize_cscl_feature(
     if not isinstance(properties, Mapping) or not isinstance(raw_geometry, Mapping):
         raise ValueError("CSCL feature must contain GeoJSON properties and geometry")
 
-    source_id = str(first(properties, "physicalid", "PHYSICALID", default=feature.get("id", "unknown")))
+    source_id = _citywide_source_id(properties, feature.get("id"))
+    borough_code = _borough_code(properties)
     directionality = _directionality(first(properties, "trafdir", "TRAFDIR"))
     travel_lanes = as_int(first(properties, "number_travel_lanes", "number_tra"))
     lanes_forward = travel_lanes if directionality is Directionality.FORWARD else None
@@ -50,8 +84,8 @@ def normalize_cscl_feature(
         source_id=source_id,
         paths=line_paths(geometry),
         name=first(properties, "full_street_name", "full_stree", "street_name_label", "stname_lab"),
-        borough=None,
-        feature_type=segment_type,
+        borough=BOROUGH_NAMES.get(borough_code) if borough_code is not None else None,
+        feature_type=str(segment_type) if segment_type is not None else None,
         route_type=str(road_class_value) if road_class_value is not None else None,
         roadway_type=str(road_class_value) if road_class_value is not None else None,
         build_status=first(properties, "status", "STATUS"),
