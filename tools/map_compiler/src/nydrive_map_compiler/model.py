@@ -71,3 +71,18 @@ class RoadSurface:
     status: str | None
     provenance: SourceProvenance
     source_properties: Mapping[str, Scalar] = field(default_factory=dict)
+
+
+@dataclass(frozen=True, slots=True)
+class BuildingFootprint:
+    source_id: str
+    polygons: tuple[Polygon2D, ...]
+    height_m: float
+    height_source: str
+    source_ground_elevation_m: float | None
+    feature_code: int | None
+    bin: str | None
+    name: str | None
+    construction_year: int | None
+    provenance: SourceProvenance
+    source_properties: Mapping[str, Scalar] = field(default_factory=dict)
