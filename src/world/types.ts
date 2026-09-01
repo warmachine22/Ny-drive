@@ -15,6 +15,7 @@ export interface TileManifestEntry {
   file: string;
   road_surface_count: number;
   road_count: number;
+  building_count?: number;
 }
 
 export interface WorldManifest {
@@ -47,6 +48,22 @@ export interface TileRoadSurface {
   vertical_status?: 'resolved' | 'unresolved' | 'terrain-only';
   associated_road_id?: string | null;
   elevation_source?: string;
+}
+
+export interface TileBuilding {
+  stable_id: string;
+  source_id: string;
+  source_key: string;
+  feature_code: number | null;
+  bin: string | null;
+  name: string | null;
+  construction_year: number | null;
+  height_m: number;
+  height_source: 'nyc-height-roof' | 'deterministic-visual-fallback' | string;
+  base_elevation_m: number;
+  base_elevation_source: string;
+  source_ground_elevation_m: number | null;
+  polygons: TilePolygon[];
 }
 
 export interface TileRoad {
@@ -89,6 +106,7 @@ export interface TilePayload {
   size_m: number;
   road_surfaces: TileRoadSurface[];
   roads: TileRoad[];
+  buildings?: TileBuilding[];
   vertical_diagnostics?: VerticalDiagnostic[];
 }
 
