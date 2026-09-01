@@ -22,6 +22,38 @@ function tile(): TilePayload {
         polygons: [{ outer: [[0, 0], [30, 0], [30, 20], [0, 20], [0, 0]], holes: [] }],
       },
     ],
+    buildings: [
+      {
+        stable_id: 'nyc-building-footprints:1',
+        source_id: '1',
+        source_key: 'nyc-building-footprints',
+        feature_code: 2100,
+        bin: '1000001',
+        name: null,
+        construction_year: 1920,
+        height_m: 18,
+        height_source: 'nyc-height-roof',
+        base_elevation_m: 0,
+        base_elevation_source: 'flat-fixture',
+        source_ground_elevation_m: 5,
+        polygons: [{ outer: [[40, 40], [60, 40], [60, 60], [40, 60], [40, 40]], holes: [] }],
+      },
+      {
+        stable_id: 'nyc-building-footprints:2',
+        source_id: '2',
+        source_key: 'nyc-building-footprints',
+        feature_code: 2100,
+        bin: '1000002',
+        name: null,
+        construction_year: null,
+        height_m: 12,
+        height_source: 'deterministic-visual-fallback',
+        base_elevation_m: 0,
+        base_elevation_source: 'flat-fixture',
+        source_ground_elevation_m: null,
+        polygons: [{ outer: [[70, 40], [90, 40], [90, 60], [70, 60], [70, 40]], holes: [] }],
+      },
+    ],
     roads: [
       {
         stable_id: 'nyc-cscl-centerline:7',
@@ -46,7 +78,7 @@ function tile(): TilePayload {
 }
 
 describe('ThreeTileRuntimeAdapter', () => {
-  it('streams support below Roadbed and bounds both collider types to physics activation', async () => {
+  it('batches building massing while bounding physics to driving surfaces', async () => {
     const scene = new THREE.Scene();
     const physics = await createPhysicsRuntime();
     const adapter = new ThreeTileRuntimeAdapter(scene, physics);
@@ -60,8 +92,16 @@ describe('ThreeTileRuntimeAdapter', () => {
     expect(support?.position.y).toBeLessThan(-0.2);
     const centerline = group?.children.find((child) => child.userData.road?.name === 'BROADWAY');
     expect(centerline?.userData.road).toMatchObject({ lanes: 4, widthM: 18, roadClass: '1' });
+
+    const massing = group?.getObjectByName('building-massing:4:13');
+    expect(massing?.userData.buildingMassing).toEqual({
+      buildingCount: 2,
+      collisionPolicy: 'visual-only',
+    });
+    expect(group?.children.filter((child) => child.name.startsWith('building-massing:'))).toHaveLength(1);
     expect(physics.world.colliders.len()).toBe(0);
 
+    // Buildings add no colliders: only Roadbed + schema-v1 support ground are active.
     expect(adapter.setPhysicsActive(fixture.tile_id, true)).toBe(2);
     expect(physics.world.colliders.len()).toBe(2);
     expect(adapter.setPhysicsActive(fixture.tile_id, true)).toBe(2);
