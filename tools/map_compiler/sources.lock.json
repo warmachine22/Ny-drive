@@ -1,5 +1,5 @@
 {
-  "version": 3,
+  "version": 4,
   "project_crs": "EPSG:32118",
   "project_origin_wgs84": [-74.006, 40.7128],
   "sources": [
@@ -27,6 +27,21 @@
       "citywide_order": "bphys_id ASC, objectid ASC",
       "citywide_filter": "boroughcode in 1-5",
       "terms": "NYC Open Data / DCP informational-use limitations and disclaimers"
+    },
+    {
+      "key": "nyc-building-footprints",
+      "provider": "NYC Office of Technology and Innovation / NYC Open Data",
+      "dataset_id": "5zhs-2jue",
+      "landing_page": "https://data.cityofnewyork.us/City-Government/BUILDING/5zhs-2jue",
+      "socrata_geojson": "https://data.cityofnewyork.us/resource/5zhs-2jue.geojson",
+      "metadata": "https://github.com/CityOfNewYork/nyc-geo-metadata/blob/main/Metadata/Metadata_BuildingFootprints.md",
+      "data_last_updated": "2026-08-23",
+      "update_frequency": "weekly",
+      "api_crs": "EPSG:4326",
+      "citywide_identity": "DOITT_ID",
+      "citywide_order": "doitt_id ASC, objectid ASC",
+      "compiler_policy": "use real footprint geometry; convert positive HEIGHT_ROOF feet to metres; omit placeholder feature code 1003; label deterministic fallback heights explicitly; ground visual massing to the active road/terrain world rather than treating GROUND_ELEVATION as interchangeable with the runtime vertical baseline",
+      "terms": "NYC Open Data policies and restrictions apply; provider is NYC OTI"
     },
     {
       "key": "nyc-dcm-street-centerline",
