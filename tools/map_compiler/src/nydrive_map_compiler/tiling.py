@@ -8,7 +8,7 @@ from shapely.geometry import GeometryCollection, LineString, MultiLineString, Mu
 from shapely.geometry.base import BaseGeometry
 from shapely.ops import unary_union
 
-from .model import RoadCenterline, RoadSurface
+from .model import BuildingFootprint, RoadCenterline, RoadSurface
 from .vertical import VerticalResolver
 
 TILE_SIZE_M = 256.0
@@ -40,15 +40,23 @@ def _candidate_tiles(bounds: tuple[float, float, float, float]) -> Iterable[tupl
             yield ix, iy
 
 
-def _surface_geometry(surface: RoadSurface) -> BaseGeometry:
-    polygons = [
+def _polygon_geometry(polygons) -> BaseGeometry:
+    parts = [
         Polygon(
             [(point.x, point.y) for point in polygon.outer],
             [[(point.x, point.y) for point in hole] for hole in polygon.holes],
         )
-        for polygon in surface.polygons
+        for polygon in polygons
     ]
-    return unary_union(polygons)
+    return unary_union(parts)
+
+
+def _surface_geometry(surface: RoadSurface) -> BaseGeometry:
+    return _polygon_geometry(surface.polygons)
+
+
+def _building_geometry(building: BuildingFootprint) -> BaseGeometry:
+    return _polygon_geometry(building.polygons)
 
 
 def _road_geometry(road: RoadCenterline) -> BaseGeometry:
@@ -119,7 +127,7 @@ def _serialize_polygon(
     vertical: VerticalResolver | None = None,
 ) -> dict[str, Any]:
     def ring_points(coords):
-        source_coords = _densify_coords(coords) if vertical is not None else list(coords)
+        source_coords = _densify_coords(coords) if vertical is not None and surface is not None else list(coords)
         result = []
         for x, y, *_ in source_coords:
             elevation = (
@@ -165,17 +173,30 @@ def _empty_tile(ix: int, iy: int, schema_version: int) -> dict[str, Any]:
         "size_m": TILE_SIZE_M,
         "road_surfaces": [],
         "roads": [],
+        "buildings": [],
     }
+
+
+def _building_base_elevation(building_geometry: BaseGeometry, vertical: VerticalResolver | None) -> tuple[float, str]:
+    if vertical is None or building_geometry.is_empty:
+        return 0.0, "flat-fixture"
+    point = building_geometry.representative_point()
+    sampled = vertical.elevation.sample(float(point.x), float(point.y))
+    if sampled is None:
+        return 0.0, "missing-terrain-fallback"
+    return float(sampled), vertical.source_key
 
 
 def compile_tiles(
     surfaces: Iterable[RoadSurface],
     roads: Iterable[RoadCenterline],
+    buildings: Iterable[BuildingFootprint] = (),
     *,
     vertical: VerticalResolver | None = None,
 ) -> dict[str, dict[str, Any]]:
     surfaces = list(surfaces)
     roads = list(roads)
+    buildings = list(buildings)
     schema_version = 2 if vertical is not None else 1
     tiles: dict[tuple[int, int], dict[str, Any]] = {}
 
@@ -211,6 +232,41 @@ def compile_tiles(
                 )
                 item["elevation_source"] = vertical.source_key
             target["road_surfaces"].append(item)
+
+    for building in buildings:
+        geometry = _building_geometry(building)
+        if geometry.is_empty:
+            continue
+        stable_id = f"{building.provenance.source_key}:{building.source_id}"
+        base_elevation_m, base_elevation_source = _building_base_elevation(geometry, vertical)
+        for ix, iy in _candidate_tiles(geometry.bounds):
+            clipped = geometry.intersection(box(*tile_bounds(ix, iy)))
+            parts = _polygon_parts(clipped)
+            if not parts:
+                continue
+            target = tiles.setdefault((ix, iy), _empty_tile(ix, iy, schema_version))
+            origin = tile_origin(ix, iy)
+            target["buildings"].append(
+                {
+                    "stable_id": stable_id,
+                    "source_id": building.source_id,
+                    "source_key": building.provenance.source_key,
+                    "feature_code": building.feature_code,
+                    "bin": building.bin,
+                    "name": building.name,
+                    "construction_year": building.construction_year,
+                    "height_m": round(building.height_m, ELEVATION_ROUND_DIGITS),
+                    "height_source": building.height_source,
+                    "base_elevation_m": round(base_elevation_m, ELEVATION_ROUND_DIGITS),
+                    "base_elevation_source": base_elevation_source,
+                    "source_ground_elevation_m": (
+                        round(building.source_ground_elevation_m, ELEVATION_ROUND_DIGITS)
+                        if building.source_ground_elevation_m is not None
+                        else None
+                    ),
+                    "polygons": [_serialize_polygon(part, origin) for part in parts],
+                }
+            )
 
     for road in roads:
         geometry = _road_geometry(road)
@@ -262,6 +318,7 @@ def compile_tiles(
     for (ix, iy), payload in sorted(tiles.items()):
         payload["road_surfaces"].sort(key=lambda item: item["stable_id"])
         payload["roads"].sort(key=lambda item: item["stable_id"])
+        payload["buildings"].sort(key=lambda item: item["stable_id"])
         if vertical is not None:
             feature_ids = {
                 item["stable_id"]
@@ -280,21 +337,22 @@ def compile_tiles(
 def validate_tile_local_coordinates(tiles: dict[str, dict[str, Any]]) -> None:
     tolerance = 0.002
     for payload in tiles.values():
-        for surface in payload["road_surfaces"]:
-            rings = []
-            for polygon in surface["polygons"]:
-                rings.append(polygon["outer"])
-                rings.extend(polygon["holes"])
-            for ring in rings:
-                for point in ring:
-                    x, y = point[:2]
-                    if not (
-                        -tolerance <= x <= TILE_SIZE_M + tolerance
-                        and -tolerance <= y <= TILE_SIZE_M + tolerance
-                    ):
-                        raise ValueError(
-                            f"surface coordinate escaped tile {payload['tile_id']}: {(x, y)}"
-                        )
+        for collection in ("road_surfaces", "buildings"):
+            for feature in payload.get(collection, []):
+                rings = []
+                for polygon in feature["polygons"]:
+                    rings.append(polygon["outer"])
+                    rings.extend(polygon["holes"])
+                for ring in rings:
+                    for point in ring:
+                        x, y = point[:2]
+                        if not (
+                            -tolerance <= x <= TILE_SIZE_M + tolerance
+                            and -tolerance <= y <= TILE_SIZE_M + tolerance
+                        ):
+                            raise ValueError(
+                                f"{collection} coordinate escaped tile {payload['tile_id']}: {(x, y)}"
+                            )
         for road in payload["roads"]:
             for path in road["paths"]:
                 for point in path:
