@@ -15,12 +15,25 @@
     "units": "metres"
   },
   "input_counts": {
+    "buildings": 797,
     "centerline": 71,
     "roadbed": 110
   },
   "name": "flatiron-madison-square",
+  "scenery": {
+    "building_count": 797,
+    "collision_policy": "visual-only",
+    "fallback_height_count": 1,
+    "source_height_count": 796,
+    "source_key": "nyc-building-footprints"
+  },
   "schema_version": 1,
   "sources": {
+    "buildings": {
+      "data_revision": "2026-08-23",
+      "dataset_id": "5zhs-2jue",
+      "query_url": "https://data.cityofnewyork.us/resource/5zhs-2jue.geojson?%24limit=5000&%24where=within_box%28the_geom%2C40.7481%2C-73.9967%2C40.7388%2C-73.9882%29"
+    },
     "centerline": {
       "data_revision": "2026-08-16",
       "dataset_id": "inkn-q76z",
@@ -35,6 +48,7 @@
   "tile_count": 15,
   "tiles": [
     {
+      "building_count": 44,
       "file": "tiles/3_11.json",
       "index": [
         3,
@@ -49,6 +63,7 @@
       "tile_id": "3:11"
     },
     {
+      "building_count": 67,
       "file": "tiles/3_12.json",
       "index": [
         3,
@@ -63,6 +78,7 @@
       "tile_id": "3:12"
     },
     {
+      "building_count": 98,
       "file": "tiles/3_13.json",
       "index": [
         3,
@@ -77,6 +93,7 @@
       "tile_id": "3:13"
     },
     {
+      "building_count": 51,
       "file": "tiles/3_14.json",
       "index": [
         3,
@@ -91,6 +108,7 @@
       "tile_id": "3:14"
     },
     {
+      "building_count": 10,
       "file": "tiles/3_15.json",
       "index": [
         3,
@@ -105,6 +123,7 @@
       "tile_id": "3:15"
     },
     {
+      "building_count": 64,
       "file": "tiles/4_11.json",
       "index": [
         4,
@@ -119,6 +138,7 @@
       "tile_id": "4:11"
     },
     {
+      "building_count": 86,
       "file": "tiles/4_12.json",
       "index": [
         4,
@@ -133,6 +153,7 @@
       "tile_id": "4:12"
     },
     {
+      "building_count": 86,
       "file": "tiles/4_13.json",
       "index": [
         4,
@@ -147,6 +168,7 @@
       "tile_id": "4:13"
     },
     {
+      "building_count": 126,
       "file": "tiles/4_14.json",
       "index": [
         4,
@@ -161,6 +183,7 @@
       "tile_id": "4:14"
     },
     {
+      "building_count": 22,
       "file": "tiles/4_15.json",
       "index": [
         4,
@@ -175,6 +198,7 @@
       "tile_id": "4:15"
     },
     {
+      "building_count": 67,
       "file": "tiles/5_11.json",
       "index": [
         5,
@@ -189,6 +213,7 @@
       "tile_id": "5:11"
     },
     {
+      "building_count": 42,
       "file": "tiles/5_12.json",
       "index": [
         5,
@@ -203,6 +228,7 @@
       "tile_id": "5:12"
     },
     {
+      "building_count": 86,
       "file": "tiles/5_13.json",
       "index": [
         5,
@@ -217,6 +243,7 @@
       "tile_id": "5:13"
     },
     {
+      "building_count": 86,
       "file": "tiles/5_14.json",
       "index": [
         5,
@@ -231,6 +258,7 @@
       "tile_id": "5:14"
     },
     {
+      "building_count": 18,
       "file": "tiles/5_15.json",
       "index": [
         5,
