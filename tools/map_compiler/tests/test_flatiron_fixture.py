@@ -1,5 +1,4 @@
 import json
-from collections import Counter
 from pathlib import Path
 
 from nydrive_map_compiler.fixture import compile_snapshot, write_compiled_fixture
@@ -14,9 +13,14 @@ def test_flatiron_fixture_compiles_real_official_snapshot():
     manifest, tiles = compile_snapshot(snapshot)
 
     assert manifest["name"] == "flatiron-madison-square"
-    assert manifest["input_counts"]["roadbed"] == 110
-    assert manifest["input_counts"]["centerline"] == 71
-    assert manifest["input_counts"]["buildings"] >= 0
+    assert manifest["input_counts"] == {"roadbed": 110, "centerline": 71, "buildings": 797}
+    assert manifest["scenery"] == {
+        "source_key": "nyc-building-footprints",
+        "building_count": 797,
+        "source_height_count": 796,
+        "fallback_height_count": 1,
+        "collision_policy": "visual-only",
+    }
     assert 12 <= manifest["tile_count"] <= 30
     assert manifest["coordinate_system"]["tile_size_m"] == 256.0
 
@@ -30,8 +34,10 @@ def test_flatiron_fixture_compiles_real_official_snapshot():
 
     surface_counts = feature_tile_counts(tiles, "road_surfaces")
     road_counts = feature_tile_counts(tiles, "roads")
+    building_counts = feature_tile_counts(tiles, "buildings")
     assert max(surface_counts.values()) >= 2
     assert max(road_counts.values()) >= 2
+    assert max(building_counts.values()) >= 2
 
     tolerance = 0.002
     for tile in tiles.values():
