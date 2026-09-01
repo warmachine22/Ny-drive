@@ -1,5 +1,6 @@
 import * as THREE from 'three';
 import type { PhysicsRuntime } from '../physics/PhysicsWorld';
+import { buildBuildingMassingGeometry } from './BuildingMassing';
 import { buildRoadSurfaceCollisionMesh, RoadCollisionManager } from './RoadCollision';
 import {
   isFlatSupportEligible,
@@ -40,6 +41,12 @@ export class ThreeTileRuntimeAdapter implements TileRuntimeAdapter {
     metalness: 0,
     side: THREE.DoubleSide,
   });
+  private readonly buildingMaterial = new THREE.MeshStandardMaterial({
+    color: 0x8f999d,
+    roughness: 0.9,
+    metalness: 0.01,
+    flatShading: true,
+  });
   private readonly centerlineMaterial = new THREE.LineBasicMaterial({ color: 0xa7b1bb });
 
   constructor(
@@ -71,6 +78,19 @@ export class ThreeTileRuntimeAdapter implements TileRuntimeAdapter {
       supportMesh.position.set(tile.size_m / 2, SUPPORT_SURFACE_Y_M, tile.size_m / 2);
       supportMesh.userData.supportGround = true;
       group.add(supportMesh);
+    }
+
+    const buildings = tile.buildings ?? [];
+    const buildingGeometry = buildBuildingMassingGeometry(buildings);
+    if (buildingGeometry) {
+      geometries.push(buildingGeometry);
+      const buildingMesh = new THREE.Mesh(buildingGeometry, this.buildingMaterial);
+      buildingMesh.name = `building-massing:${tile.tile_id}`;
+      buildingMesh.userData.buildingMassing = {
+        buildingCount: buildings.length,
+        collisionPolicy: 'visual-only',
+      };
+      group.add(buildingMesh);
     }
 
     for (const surface of tile.road_surfaces) {
@@ -187,6 +207,7 @@ export class ThreeTileRuntimeAdapter implements TileRuntimeAdapter {
     for (const tileId of [...this.visuals.keys()]) this.detachTile(tileId);
     this.roadMaterial.dispose();
     this.supportMaterial.dispose();
+    this.buildingMaterial.dispose();
     this.centerlineMaterial.dispose();
   }
 }
