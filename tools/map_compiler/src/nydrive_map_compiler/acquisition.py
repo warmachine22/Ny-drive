@@ -7,6 +7,7 @@ from typing import Any, Callable, Iterable, Mapping
 
 ROADBED_RESOURCE = "https://data.cityofnewyork.us/resource/i36f-5ih7.geojson"
 CENTERLINE_RESOURCE = "https://data.cityofnewyork.us/resource/inkn-q76z.geojson"
+BUILDING_RESOURCE = "https://data.cityofnewyork.us/resource/5zhs-2jue.geojson"
 PAGE_SIZE = 25_000
 NYC_BOUNDS_WGS84 = (-74.2591, 40.4774, -73.7002, 40.9176)
 NYC_BOROUGH_CODES = {"1", "2", "3", "4", "5"}
@@ -57,6 +58,19 @@ CENTERLINE_PROPERTIES = (
     "boroughcod",
     "boroughind",
     "bphysid",
+)
+BUILDING_PROPERTIES = (
+    "doitt_id",
+    "bin",
+    "name",
+    "construction_year",
+    "feature_code",
+    "geom_source",
+    "ground_elevation",
+    "height_roof",
+    "last_edited_date",
+    "last_status_type",
+    "objectid",
 )
 
 FetchJson = Callable[[str], Mapping[str, Any]]
@@ -172,6 +186,7 @@ def build_citywide_snapshot(
     *,
     roadbed_revision: str,
     centerline_revision: str,
+    building_revision: str | None = None,
     page_size: int = PAGE_SIZE,
     fetch: FetchJson = download_json,
 ) -> dict[str, Any]:
@@ -199,7 +214,7 @@ def build_citywide_snapshot(
             stable_property="bphys_id",
         )
     )
-    return {
+    snapshot: dict[str, Any] = {
         "schema_version": 1,
         "name": "nyc-five-boroughs",
         "scope": "nyc-five-boroughs",
@@ -222,3 +237,23 @@ def build_citywide_snapshot(
         "roadbed": roadbed,
         "centerline": centerline,
     }
+    if building_revision is not None:
+        building_raw = download_feature_collection(
+            BUILDING_RESOURCE,
+            order="doitt_id ASC, objectid ASC",
+            page_size=page_size,
+            fetch=fetch,
+        )
+        buildings = compact_collection(
+            building_raw,
+            keep_properties=BUILDING_PROPERTIES,
+            stable_property="doitt_id",
+        )
+        snapshot["sources"]["buildings"] = {
+            "dataset_id": "5zhs-2jue",
+            "data_revision": building_revision,
+            "resource_url": BUILDING_RESOURCE,
+            "order": "doitt_id ASC, objectid ASC",
+        }
+        snapshot["buildings"] = buildings
+    return snapshot
