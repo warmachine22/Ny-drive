@@ -19,11 +19,10 @@ jobs:
           ref: roach/T011-chatgpt-nydrive-0831d
       - uses: actions/setup-node@v4
         with:
-          node-version: '22'
-          cache: npm
+          node-version: '22.16.0'
       - name: Install project and browser
         run: |
-          npm ci
+          npm install --ignore-scripts
           npm install --no-save playwright@1.55.0
           npx playwright install chromium
       - name: Start Vite
@@ -68,6 +67,7 @@ jobs:
             errors,
           };
           fs.writeFileSync('browser-smoke/result.json', JSON.stringify(result, null, 2));
+          console.log(JSON.stringify(result));
           if (result.manifestBuildings !== 797) throw new Error(`Expected 797 buildings, got ${result.manifestBuildings}`);
           if (errors.length) throw new Error(errors.join('\n'));
           await browser.close();
