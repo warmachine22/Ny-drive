@@ -9,6 +9,7 @@ ROADBED_RESOURCE = "https://data.cityofnewyork.us/resource/i36f-5ih7.geojson"
 CENTERLINE_RESOURCE = "https://data.cityofnewyork.us/resource/inkn-q76z.geojson"
 PAGE_SIZE = 25_000
 NYC_BOUNDS_WGS84 = (-74.2591, 40.4774, -73.7002, 40.9176)
+NYC_BOROUGH_CODES = {"1", "2", "3", "4", "5"}
 
 ROADBED_PROPERTIES = (
     "source_id",
@@ -21,21 +22,26 @@ ROADBED_PROPERTIES = (
 CENTERLINE_PROPERTIES = (
     "physicalid",
     "bphys_id",
+    "boroughcode",
     "borough_code",
     "borough_indicator",
     "status",
     "trafdir",
     "rw_type",
+    "streetwidth",
     "street_width",
     "from_level_code",
     "to_level_code",
     "number_travel_lanes",
     "number_park_lanes",
+    "number_total_lanes",
     "number_total_lane",
     "full_street_name",
     "street_name",
     "street_name_label",
+    "stname_label",
     "segment_type",
+    "segmentlength",
     "segment_length",
     "objectid",
     # Legacy/truncated aliases retained for archived snapshots.
@@ -97,9 +103,12 @@ def download_feature_collection(
     return {"type": "FeatureCollection", "features": features}
 
 
-def _property_value(properties: Mapping[str, Any], name: str):
+def _property_value(properties: Mapping[str, Any], *names: str):
     lowered = {str(key).lower(): value for key, value in properties.items()}
-    return lowered.get(name.lower())
+    for name in names:
+        if name.lower() in lowered:
+            return lowered[name.lower()]
+    return None
 
 
 def compact_collection(
@@ -141,6 +150,24 @@ def compact_collection(
     return {"type": "FeatureCollection", "features": compacted}
 
 
+def _only_nyc_boroughs(collection: Mapping[str, Any]) -> dict[str, Any]:
+    features = []
+    for feature in collection.get("features") or []:
+        properties = feature.get("properties") or {}
+        code = _property_value(
+            properties,
+            "boroughcode",
+            "borough_code",
+            "boroughcod",
+            "borocode",
+            "borough_indicator",
+            "boroughind",
+        )
+        if str(code or "").strip() in NYC_BOROUGH_CODES:
+            features.append(feature)
+    return {"type": "FeatureCollection", "features": features}
+
+
 def build_citywide_snapshot(
     *,
     roadbed_revision: str,
@@ -165,10 +192,12 @@ def build_citywide_snapshot(
         keep_properties=ROADBED_PROPERTIES,
         stable_property="source_id",
     )
-    centerline = compact_collection(
-        centerline_raw,
-        keep_properties=CENTERLINE_PROPERTIES,
-        stable_property="bphys_id",
+    centerline = _only_nyc_boroughs(
+        compact_collection(
+            centerline_raw,
+            keep_properties=CENTERLINE_PROPERTIES,
+            stable_property="bphys_id",
+        )
     )
     return {
         "schema_version": 1,
@@ -187,6 +216,7 @@ def build_citywide_snapshot(
                 "data_revision": centerline_revision,
                 "resource_url": CENTERLINE_RESOURCE,
                 "order": "bphys_id ASC, objectid ASC",
+                "borough_filter": "NYC borough codes 1-5",
             },
         },
         "roadbed": roadbed,

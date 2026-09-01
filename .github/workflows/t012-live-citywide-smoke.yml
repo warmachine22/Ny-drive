@@ -29,7 +29,7 @@ jobs:
 
           checks = (
               (ROADBED_RESOURCE, "source_id ASC", {"source_id", "feat_code", "status"}),
-              (CENTERLINE_RESOURCE, "bphys_id ASC, objectid ASC", {"bphys_id", "physicalid", "borough_code", "from_level_code", "to_level_code"}),
+              (CENTERLINE_RESOURCE, "bphys_id ASC, objectid ASC", {"bphys_id", "physicalid", "boroughcode", "streetwidth", "from_level_code", "to_level_code"}),
           )
           for base, order, required in checks:
               first = download_json(page_url(base, limit=3, offset=0, order=order))

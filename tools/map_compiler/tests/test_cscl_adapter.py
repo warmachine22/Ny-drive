@@ -33,13 +33,14 @@ def test_fixture_cscl_metadata_becomes_driving_semantics():
     assert road.source_properties["from_level_code"] == "13"
 
 
-def test_citywide_cscl_uses_bphys_identity_and_borough_name():
+def test_citywide_cscl_uses_live_bphys_borough_and_width_fields():
     feature = {
         "type": "Feature",
         "properties": {
             "physicalid": "1341",
             "bphys_id": "301341",
-            "borough_code": "3",
+            "boroughcode": "3",
+            "streetwidth": "50",
             "full_street_name": "TEST STREET",
             "from_level_code": "13",
             "to_level_code": "13",
@@ -52,6 +53,7 @@ def test_citywide_cscl_uses_bphys_identity_and_borough_name():
     road = normalize_cscl_feature(feature, source_revision="2026-08-16")
     assert road.source_id == "301341"
     assert road.borough == "Brooklyn"
+    assert 15.23 < road.semantics.width_m < 15.25
 
 
 def test_citywide_cscl_fallback_prefixes_physical_id_with_borough():
