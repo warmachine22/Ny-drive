@@ -10,8 +10,8 @@ from nydrive_map_compiler.acquisition import PAGE_SIZE, build_citywide_snapshot
 def main() -> int:
     parser = argparse.ArgumentParser(description="Acquire deterministic NYC five-borough Roadbed/CSCL snapshot")
     parser.add_argument("--output", type=Path, required=True)
-    parser.add_argument("--roadbed-revision", default="2024-04-24")
-    parser.add_argument("--centerline-revision", default="2026-08-16")
+    parser.add_argument("--roadbed-revision", required=True, help="source data revision recorded in the snapshot")
+    parser.add_argument("--centerline-revision", required=True, help="source data revision recorded in the snapshot")
     parser.add_argument("--page-size", type=int, default=PAGE_SIZE)
     args = parser.parse_args()
 

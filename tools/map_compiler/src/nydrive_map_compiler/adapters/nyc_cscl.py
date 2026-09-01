@@ -35,6 +35,7 @@ def _borough_code(properties: Mapping[str, Any]) -> int | None:
     return as_int(
         first(
             properties,
+            "boroughcode",
             "borough_code",
             "boroughcod",
             "borocode",
@@ -74,7 +75,7 @@ def normalize_cscl_feature(
     travel_lanes = as_int(first(properties, "number_travel_lanes", "number_tra"))
     lanes_forward = travel_lanes if directionality is Directionality.FORWARD else None
     lanes_backward = travel_lanes if directionality is Directionality.REVERSE else None
-    width_m = parse_dcm_width_m(first(properties, "street_width", "streetwidt"))
+    width_m = parse_dcm_width_m(first(properties, "streetwidth", "street_width", "streetwidt"))
     road_class_value = first(properties, "rw_type", "RW_TYPE")
     segment_type = first(properties, "segment_type", "segment_ty")
     segment_type_code = str(segment_type).strip() if segment_type is not None else ""
@@ -83,7 +84,14 @@ def normalize_cscl_feature(
     return RoadCenterline(
         source_id=source_id,
         paths=line_paths(geometry),
-        name=first(properties, "full_street_name", "full_stree", "street_name_label", "stname_lab"),
+        name=first(
+            properties,
+            "full_street_name",
+            "full_stree",
+            "street_name_label",
+            "stname_label",
+            "stname_lab",
+        ),
         borough=BOROUGH_NAMES.get(borough_code) if borough_code is not None else None,
         feature_type=str(segment_type) if segment_type is not None else None,
         route_type=str(road_class_value) if road_class_value is not None else None,
