@@ -14,7 +14,9 @@ def test_flatiron_fixture_compiles_real_official_snapshot():
     manifest, tiles = compile_snapshot(snapshot)
 
     assert manifest["name"] == "flatiron-madison-square"
-    assert manifest["input_counts"] == {"roadbed": 110, "centerline": 71}
+    assert manifest["input_counts"]["roadbed"] == 110
+    assert manifest["input_counts"]["centerline"] == 71
+    assert manifest["input_counts"]["buildings"] >= 0
     assert 12 <= manifest["tile_count"] <= 30
     assert manifest["coordinate_system"]["tile_size_m"] == 256.0
 
@@ -33,13 +35,14 @@ def test_flatiron_fixture_compiles_real_official_snapshot():
 
     tolerance = 0.002
     for tile in tiles.values():
-        for surface in tile["road_surfaces"]:
-            for polygon in surface["polygons"]:
-                for ring in [polygon["outer"], *polygon["holes"]]:
-                    assert all(-tolerance <= value <= TILE_SIZE_M + tolerance for point in ring for value in point)
+        for collection in ("road_surfaces", "buildings"):
+            for feature in tile.get(collection, []):
+                for polygon in feature["polygons"]:
+                    for ring in [polygon["outer"], *polygon["holes"]]:
+                        assert all(-tolerance <= value <= TILE_SIZE_M + tolerance for point in ring for value in point[:2])
         for road in tile["roads"]:
             for path in road["paths"]:
-                assert all(-tolerance <= value <= TILE_SIZE_M + tolerance for point in path for value in point)
+                assert all(-tolerance <= value <= TILE_SIZE_M + tolerance for point in path for value in point[:2])
 
 
 def test_flatiron_fixture_writer_is_byte_deterministic(tmp_path: Path):
