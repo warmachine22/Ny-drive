@@ -38,7 +38,8 @@ def test_source_height_is_converted_and_missing_height_is_explicit_fallback():
     assert measured is not None
     assert measured.height_m == 30.48
     assert measured.height_source == "nyc-height-roof"
-    assert measured.source_ground_elevation_m == 10.668
+    assert measured.source_ground_elevation_m is not None
+    assert abs(measured.source_ground_elevation_m - 10.668) < 1e-9
 
     assert fallback is not None
     assert fallback.height_m > 0
