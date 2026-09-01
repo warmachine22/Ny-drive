@@ -2,20 +2,19 @@ from __future__ import annotations
 
 import json
 from pathlib import Path
-from typing import Any, Mapping
+from typing import Any, Mapping, Sequence
 
 from .adapters.nyc_cscl import normalize_cscl_geojson
 from .adapters.nyc_roadbed import normalize_roadbed_geojson
 from .crs import PROJECT_CRS, PROJECT_ORIGIN_WGS84
+from .model import RoadCenterline, RoadSurface
 from .tiling import TILE_SIZE_M, compile_tiles, validate_tile_local_coordinates
 from .vertical import ElevationSampler, VerticalResolver
 
 
-def compile_snapshot(
+def normalize_snapshot(
     snapshot: Mapping[str, Any],
-    *,
-    elevation_sampler: ElevationSampler | None = None,
-) -> tuple[dict[str, Any], dict[str, dict[str, Any]]]:
+) -> tuple[list[RoadSurface], list[RoadCenterline]]:
     sources = snapshot.get("sources") or {}
     roadbed_meta = sources.get("roadbed") or {}
     centerline_meta = sources.get("centerline") or {}
@@ -27,6 +26,17 @@ def compile_snapshot(
         snapshot["centerline"],
         source_revision=centerline_meta.get("data_revision"),
     )
+    return roadbed, roads
+
+
+def compile_normalized_snapshot(
+    snapshot: Mapping[str, Any],
+    roadbed: Sequence[RoadSurface],
+    roads: Sequence[RoadCenterline],
+    *,
+    elevation_sampler: ElevationSampler | None = None,
+    return_vertical: bool = False,
+):
     vertical = (
         VerticalResolver(roadbed, roads, elevation_sampler)
         if elevation_sampler is not None
@@ -49,6 +59,7 @@ def compile_snapshot(
             }
         )
 
+    sources = snapshot.get("sources") or {}
     manifest = {
         "schema_version": 2 if vertical is not None else 1,
         "name": snapshot.get("name", "unnamed-fixture"),
@@ -74,6 +85,23 @@ def compile_snapshot(
             "vertical_datum": "NAVD88",
         }
         manifest["vertical_diagnostics"] = vertical.diagnostics_payload()
+    if return_vertical:
+        return manifest, tiles, vertical
+    return manifest, tiles
+
+
+def compile_snapshot(
+    snapshot: Mapping[str, Any],
+    *,
+    elevation_sampler: ElevationSampler | None = None,
+) -> tuple[dict[str, Any], dict[str, dict[str, Any]]]:
+    roadbed, roads = normalize_snapshot(snapshot)
+    manifest, tiles = compile_normalized_snapshot(
+        snapshot,
+        roadbed,
+        roads,
+        elevation_sampler=elevation_sampler,
+    )
     return manifest, tiles
 
 

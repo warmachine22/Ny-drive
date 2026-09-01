@@ -31,3 +31,41 @@ def test_fixture_cscl_metadata_becomes_driving_semantics():
     assert road.semantics.lanes_forward is None
     assert 14.01 < road.semantics.width_m < 14.03
     assert road.source_properties["from_level_code"] == "13"
+
+
+def test_citywide_cscl_uses_bphys_identity_and_borough_name():
+    feature = {
+        "type": "Feature",
+        "properties": {
+            "physicalid": "1341",
+            "bphys_id": "301341",
+            "borough_code": "3",
+            "full_street_name": "TEST STREET",
+            "from_level_code": "13",
+            "to_level_code": "13",
+        },
+        "geometry": {
+            "type": "LineString",
+            "coordinates": [[-73.99, 40.70], [-73.989, 40.70]],
+        },
+    }
+    road = normalize_cscl_feature(feature, source_revision="2026-08-16")
+    assert road.source_id == "301341"
+    assert road.borough == "Brooklyn"
+
+
+def test_citywide_cscl_fallback_prefixes_physical_id_with_borough():
+    feature = {
+        "type": "Feature",
+        "properties": {
+            "physicalid": "1341",
+            "borough_code": "4",
+        },
+        "geometry": {
+            "type": "LineString",
+            "coordinates": [[-73.90, 40.74], [-73.899, 40.74]],
+        },
+    }
+    road = normalize_cscl_feature(feature)
+    assert road.source_id == "4:1341"
+    assert road.borough == "Queens"
