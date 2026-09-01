@@ -4,10 +4,11 @@ import json
 from pathlib import Path
 from typing import Any, Mapping, Sequence
 
+from .adapters.nyc_buildings import normalize_building_geojson
 from .adapters.nyc_cscl import normalize_cscl_geojson
 from .adapters.nyc_roadbed import normalize_roadbed_geojson
 from .crs import PROJECT_CRS, PROJECT_ORIGIN_WGS84
-from .model import RoadCenterline, RoadSurface
+from .model import BuildingFootprint, RoadCenterline, RoadSurface
 from .tiling import TILE_SIZE_M, compile_tiles, validate_tile_local_coordinates
 from .vertical import ElevationSampler, VerticalResolver
 
@@ -29,11 +30,24 @@ def normalize_snapshot(
     return roadbed, roads
 
 
+def normalize_buildings(snapshot: Mapping[str, Any]) -> list[BuildingFootprint]:
+    collection = snapshot.get("buildings")
+    if not isinstance(collection, Mapping):
+        return []
+    sources = snapshot.get("sources") or {}
+    building_meta = sources.get("buildings") or {}
+    return normalize_building_geojson(
+        collection,
+        source_revision=building_meta.get("data_revision"),
+    )
+
+
 def compile_normalized_snapshot(
     snapshot: Mapping[str, Any],
     roadbed: Sequence[RoadSurface],
     roads: Sequence[RoadCenterline],
     *,
+    buildings: Sequence[BuildingFootprint] = (),
     elevation_sampler: ElevationSampler | None = None,
     return_vertical: bool = False,
 ):
@@ -42,7 +56,7 @@ def compile_normalized_snapshot(
         if elevation_sampler is not None
         else None
     )
-    tiles = compile_tiles(roadbed, roads, vertical=vertical)
+    tiles = compile_tiles(roadbed, roads, buildings, vertical=vertical)
     validate_tile_local_coordinates(tiles)
 
     tile_entries = []
@@ -56,6 +70,7 @@ def compile_normalized_snapshot(
                 "file": f"tiles/{ix}_{iy}.json",
                 "road_surface_count": len(tile["road_surfaces"]),
                 "road_count": len(tile["roads"]),
+                "building_count": len(tile.get("buildings", [])),
             }
         )
 
@@ -74,10 +89,20 @@ def compile_normalized_snapshot(
         "input_counts": {
             "roadbed": len(roadbed),
             "centerline": len(roads),
+            "buildings": len(buildings),
         },
         "tile_count": len(tiles),
         "tiles": tile_entries,
     }
+    if buildings:
+        source_height_count = sum(building.height_source == "nyc-height-roof" for building in buildings)
+        manifest["scenery"] = {
+            "source_key": "nyc-building-footprints",
+            "building_count": len(buildings),
+            "source_height_count": source_height_count,
+            "fallback_height_count": len(buildings) - source_height_count,
+            "collision_policy": "visual-only",
+        }
     if vertical is not None:
         manifest["elevation"] = {
             "source_key": vertical.source_key,
@@ -96,10 +121,12 @@ def compile_snapshot(
     elevation_sampler: ElevationSampler | None = None,
 ) -> tuple[dict[str, Any], dict[str, dict[str, Any]]]:
     roadbed, roads = normalize_snapshot(snapshot)
+    buildings = normalize_buildings(snapshot)
     manifest, tiles = compile_normalized_snapshot(
         snapshot,
         roadbed,
         roads,
+        buildings=buildings,
         elevation_sampler=elevation_sampler,
     )
     return manifest, tiles
