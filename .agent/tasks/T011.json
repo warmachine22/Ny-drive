@@ -2,7 +2,7 @@
   "id": "T011",
   "kind": "implementation",
   "title": "Generate simplified procedural NYC scenery",
-  "status": "claimed",
+  "status": "done",
   "priority": "normal",
   "depends_on": ["T003", "T005"],
   "areas": ["scenery"],
@@ -17,19 +17,22 @@
     "building/geographic data attribution and any procedural art dependencies are included in the project attribution inventory"
   ],
   "verify": "npm run check",
-  "verification": null,
-  "claim": {
-    "worker": "chatgpt-nydrive-0831d",
-    "claimed_at": "2026-09-01T02:49:56Z",
-    "lease_expires_at": "2026-09-01T04:49:56Z",
-    "branch": "roach/T011-chatgpt-nydrive-0831d",
-    "base_commit": "60b59c4de5adadae0e15091f8e3725254a7eb445"
-  },
+  "verification": "PR #13 final production-only head ce29d9d1 passed npm run check, full map-compiler tests, project health, lint/types/schemas, and Roach coordination on Ubuntu and Windows. A live Flatiron refresh compiled 797 NYC Building Footprints with 796 source HEIGHT_ROOF values and 1 explicitly labeled deterministic fallback. Chromium run 33464991251 artifact 9784529075 rendered the scenery with zero page/console errors and a stable 4/4-wheel Roadbed reset.",
+  "claim": null,
   "handoff": null,
   "review_of": null,
   "correction_of": null,
-  "integration": null,
-  "evidence": null,
-  "completed_at": null,
-  "commit": null
+  "integration": {
+    "branch": "roach/T011-chatgpt-nydrive-0831d",
+    "merge_commit": "9748453b49bf4af09739c758896a027b0ac9bdf0",
+    "level": "quick",
+    "verified_at": "2026-09-01T03:12:30Z"
+  },
+  "evidence": {
+    "work": "Added NYC Building Footprints acquisition and normalization, real roof-height conversion with explicit deterministic fallback policy, terrain-consistent building grounding, 256 m tile scenery serialization, one merged Three.js building mesh per streamed tile, visual-only scenery collision policy, regenerated 797-building Flatiron fixture, attribution/provenance documentation, and compiler/runtime regression coverage.",
+    "work_waived": false,
+    "task_check": "passed"
+  },
+  "completed_at": "2026-09-01T03:12:30Z",
+  "commit": "9748453b49bf4af09739c758896a027b0ac9bdf0"
 }

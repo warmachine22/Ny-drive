@@ -15,10 +15,10 @@
     "status": "passed",
     "level": "quick",
     "command": "python3 scripts/roach_check.py && npm run check && python3 -m pytest tools/map_compiler/tests",
-    "notes": "PR #12 final production-only head passed full map-compiler tests, web runtime, project health, lint/types/schemas, and Ubuntu/Windows Roach coordination. Temporary live NYC source smoke also passed current Roadbed/CSCL schema and ordered pagination checks with 104,961 Roadbed and 122,263 CSCL rows; the temporary workflow was removed before merge. Merged as de078d29.",
-    "verified_at": "2026-09-01T02:17:20Z",
-    "commit": "de078d29a5fa8adad62e954cbf98eca6e5131df0"
+    "notes": "PR #13 final production-only head passed npm run check, full map-compiler tests, web runtime, project health, lint/types/schemas, and Ubuntu/Windows Roach coordination. The live Flatiron scenery refresh compiled 797 NYC Building Footprints (796 source roof heights, 1 explicit fallback). Chromium run 33464991251 artifact 9784529075 rendered the building massing with zero page/console errors and stable Roadbed reset behavior. Merged as 9748453b.",
+    "verified_at": "2026-09-01T03:12:30Z",
+    "commit": "9748453b49bf4af09739c758896a027b0ac9bdf0"
   },
   "blocked": null,
-  "updated_at": "2026-09-01T02:17:20Z"
+  "updated_at": "2026-09-01T03:12:30Z"
 }
