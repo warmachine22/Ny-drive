@@ -64,8 +64,8 @@ def _five_borough_snapshot():
         (-73.985, 40.700),
     ]
     specs = [
-        (1, "13", "13", "1"),
-        (3, "13", "14", "3"),
+        (1, "13", "14", "9"),
+        (3, "14", "14", "3"),
         (4, "14", "13", "9"),
         (2, "13", "13", "4"),
         (5, "13", "13", "1"),
@@ -147,11 +147,9 @@ def test_graph_does_not_join_coincident_endpoints_at_different_vertical_levels()
     upper = _normalized_road("upper", (100.0, 0.0), (200.0, 0.0), from_level="14", to_level="14")
     graph = build_road_graph([lower, upper])
 
+    assert len(graph.edges) == 2
     assert len(graph.node_xy) == 4
-    assert set(graph.undirected[lower_node][0] for lower_node in graph.undirected)  # graph has real edges
-    lower_end = graph.edges[0].end_node
-    upper_start = graph.edges[1].start_node
-    assert lower_end != upper_start
+    assert graph.edges[0].end_node != graph.edges[1].start_node
 
 
 def test_citywide_audit_surfaces_missing_borough_and_duplicate_ids():
