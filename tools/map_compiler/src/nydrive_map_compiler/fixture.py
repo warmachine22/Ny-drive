@@ -51,6 +51,8 @@ def compile_normalized_snapshot(
     elevation_sampler: ElevationSampler | None = None,
     return_vertical: bool = False,
 ):
+    if not buildings and isinstance(snapshot.get("buildings"), Mapping):
+        buildings = normalize_buildings(snapshot)
     vertical = (
         VerticalResolver(roadbed, roads, elevation_sampler)
         if elevation_sampler is not None
