@@ -2,7 +2,7 @@
   "id": "T011",
   "kind": "implementation",
   "title": "Generate simplified procedural NYC scenery",
-  "status": "planned",
+  "status": "claimed",
   "priority": "normal",
   "depends_on": ["T003", "T005"],
   "areas": ["scenery"],
@@ -18,7 +18,13 @@
   ],
   "verify": "npm run check",
   "verification": null,
-  "claim": null,
+  "claim": {
+    "worker": "chatgpt-nydrive-0831d",
+    "claimed_at": "2026-09-01T02:49:56Z",
+    "lease_expires_at": "2026-09-01T04:49:56Z",
+    "branch": "roach/T011-chatgpt-nydrive-0831d",
+    "base_commit": "60b59c4de5adadae0e15091f8e3725254a7eb445"
+  },
   "handoff": null,
   "review_of": null,
   "correction_of": null,
