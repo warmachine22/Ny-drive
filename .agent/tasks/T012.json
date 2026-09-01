@@ -2,7 +2,7 @@
   "id": "T012",
   "kind": "implementation",
   "title": "Expand compiled road world to all five boroughs",
-  "status": "planned",
+  "status": "claimed",
   "priority": "high",
   "depends_on": ["T006", "T010"],
   "areas": ["citywide-data"],
@@ -18,7 +18,13 @@
   ],
   "verify": "python3 -m pytest tools/map_compiler/tests",
   "verification": null,
-  "claim": null,
+  "claim": {
+    "worker": "chatgpt-nydrive-0831c",
+    "claimed_at": "2026-09-01T01:52:00Z",
+    "lease_expires_at": "2026-09-01T03:52:00Z",
+    "branch": "roach/T012-chatgpt-nydrive-0831c",
+    "base_commit": "fb44f47939dcf52700edcdbb492f6c333cd4d54b"
+  },
   "handoff": null,
   "review_of": null,
   "correction_of": null,
