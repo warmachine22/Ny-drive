@@ -1,0 +1,62 @@
+name: T012 live citywide source smoke
+
+on:
+  pull_request:
+
+jobs:
+  source-smoke:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Install compiler
+        run: python -m pip install -e tools/map_compiler
+      - name: Verify live NYC citywide source schema and scale
+        run: |
+          python - <<'PY'
+          import json
+          import urllib.parse
+          import urllib.request
+
+          from nydrive_map_compiler.acquisition import (
+              CENTERLINE_RESOURCE,
+              ROADBED_RESOURCE,
+              download_json,
+              page_url,
+          )
+
+          checks = (
+              (ROADBED_RESOURCE, "source_id ASC", {"source_id", "feat_code", "status"}),
+              (CENTERLINE_RESOURCE, "bphys_id ASC, objectid ASC", {"bphys_id", "physicalid", "borough_code", "from_level_code", "to_level_code"}),
+          )
+          for base, order, required in checks:
+              first = download_json(page_url(base, limit=3, offset=0, order=order))
+              second = download_json(page_url(base, limit=3, offset=3, order=order))
+              assert first.get("type") == "FeatureCollection"
+              assert second.get("type") == "FeatureCollection"
+              assert len(first.get("features", [])) == 3
+              assert len(second.get("features", [])) == 3
+              props = {
+                  str(key).lower()
+                  for feature in first["features"]
+                  for key in (feature.get("properties") or {})
+              }
+              missing = required - props
+              assert not missing, (base, missing, sorted(props))
+
+          def row_count(dataset_id: str) -> int:
+              query = urllib.parse.urlencode({"$select": "count(*)"})
+              url = f"https://data.cityofnewyork.us/resource/{dataset_id}.json?{query}"
+              request = urllib.request.Request(url, headers={"User-Agent": "Ny-drive T012 source smoke/0.1"})
+              with urllib.request.urlopen(request, timeout=60) as response:
+                  payload = json.load(response)
+              return int(payload[0]["count"])
+
+          roadbed_count = row_count("i36f-5ih7")
+          centerline_count = row_count("inkn-q76z")
+          assert roadbed_count > 90_000, roadbed_count
+          assert centerline_count > 100_000, centerline_count
+          print(f"live NYC sources roadbed={roadbed_count} centerline={centerline_count}")
+          PY
