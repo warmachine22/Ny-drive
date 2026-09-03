@@ -2,13 +2,30 @@
   "id": "T018",
   "kind": "implementation",
   "title": "Add minimap and current road identity HUD",
-  "status": "planned",
+  "status": "claimed",
   "priority": "normal",
-  "depends_on": ["T003", "T005", "T009"],
-  "areas": ["player-experience", "navigation-ui"],
-  "requirements": ["FR-003", "FR-009", "FR-011"],
-  "requires": ["repo-write", "shell"],
-  "prefers": ["browser-interaction", "vision"],
+  "depends_on": [
+    "T003",
+    "T005",
+    "T009"
+  ],
+  "areas": [
+    "player-experience",
+    "navigation-ui"
+  ],
+  "requirements": [
+    "FR-003",
+    "FR-009",
+    "FR-011"
+  ],
+  "requires": [
+    "repo-write",
+    "shell"
+  ],
+  "prefers": [
+    "browser-interaction",
+    "vision"
+  ],
   "acceptance": [
     "a compact always-available minimap uses the already-streamed compiled road centerlines/road metadata and shows the player's local surroundings plus heading without introducing a second city-map download path",
     "the HUD identifies the nearest/current named street, avenue, boulevard, highway, ramp, or other road when source data supplies a name and shows a concise road-class label derived from source metadata rather than invented precision",
@@ -18,7 +35,13 @@
   ],
   "verify": "npm run check",
   "verification": null,
-  "claim": null,
+  "claim": {
+    "worker": "claude-nydrive-c1a1",
+    "claimed_at": "2026-09-03T17:35:07Z",
+    "lease_expires_at": "2026-09-03T19:35:07Z",
+    "branch": "roach/T018-claude-nydrive-c1a1",
+    "base_commit": "4660ed15bb060f2d9f9da4e8569c6f35c9a6cf8e"
+  },
   "handoff": null,
   "review_of": null,
   "correction_of": null,
